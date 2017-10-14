@@ -1,6 +1,7 @@
 import scipy.io
 import numpy as np
 import pandas as pd
+from spyke.sweep_calculations import current_inj_per_sweep  
 from spyke.sweep_calculations import do_select_sweep_by_current_inj
 from spyke.sweep_calculations import do_select_sweep_by_spike_count
 from spyke.sweep_calculations import do_select_sweep_by_sweep_time
