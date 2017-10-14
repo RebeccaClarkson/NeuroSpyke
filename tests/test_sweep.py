@@ -56,6 +56,7 @@ def test_select_sweep_by_current_inj():
     sweep_index = ex2.select_sweep_by_current_inj(.3, 100)
     assert {0, 6, 15}.issubset(sweep_index)
     assert 16  not in sweep_index
+    assert isinstance(sweep_index, np.ndarray) 
 
     sweep_index = ex2.select_sweep_by_current_inj(.3, 1)
     assert type(sweep_index[0]) == np.int64

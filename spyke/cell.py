@@ -2,6 +2,7 @@ import scipy.io
 import numpy as np
 import pandas as pd
 from spyke.sweep_calculations import current_inj_per_sweep
+from spyke.sweep_calculations import do_select_sweep_by_current_inj
 import matplotlib as mpl
 mpl.use('TkAgg')
 mpl.rcParams['axes.spines.right'] = False
@@ -82,24 +83,13 @@ class Cell(object):
     # all selection functions being passed ..
     def select_sweep_by_current_inj(self, duration, amplitude):
         """
-        Return sweep indices for sweeps with duration/amplitude input parameters.
+        Return sweep indices as np.array for sweeps with duration/amplitude input parameters.
         For returning all depol./hyperpol. current injections, amplitude = 1/-1.
         """
         all_waveforms_df = self.current_inj_waveforms()
-        duration_bool = np.isclose(all_waveforms_df['offset_time'] 
-                - all_waveforms_df['onset_time'], duration, 1e-5)
-
-        if amplitude == 1: # depolarizing current injections
-            amplitude_bool = np.greater(all_waveforms_df['amplitude'], 0).as_matrix()
-        elif amplitude == -1: # hyperpolarizing current injections
-            amplitude_bool = np.less(all_waveforms_df['amplitude'], 0).as_matrix()
-        else:
-            amplitude_bool = np.isclose(all_waveforms_df['amplitude'] , amplitude, 1e-5)
-            
-        select_df = all_waveforms_df.loc[duration_bool & amplitude_bool]
-        sweep_index = select_df['sweep_index']
-        return np.array(sweep_index)
+        return do_select_sweep_by_current_inj(all_waveforms_df, duration, amplitude)
     
+   
     def select_sweep_by_spike_count(self, num_spikes):
         """
         Return sweep indices as np.array for sweeps that have a given number of APs
