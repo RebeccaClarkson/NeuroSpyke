@@ -1,8 +1,9 @@
 import scipy.io
 import numpy as np
 import pandas as pd
-from spyke.sweep_calculations import current_inj_per_sweep
 from spyke.sweep_calculations import do_select_sweep_by_current_inj
+from spyke.sweep_calculations import do_select_sweep_by_spike_count
+from spyke.sweep_calculations import do_select_sweep_by_sweep_time
 import matplotlib as mpl
 mpl.use('TkAgg')
 mpl.rcParams['axes.spines.right'] = False
@@ -80,7 +81,6 @@ class Cell(object):
         command_waveform_df = pd.concat(all_dfs_in_list)
         return command_waveform_df 
 
-    # all selection functions being passed ..
     def select_sweep_by_current_inj(self, duration, amplitude):
         """
         Return sweep indices as np.array for sweeps with duration/amplitude input parameters.
@@ -95,13 +95,15 @@ class Cell(object):
         Return sweep indices as np.array for sweeps that have a given number of APs
         """
         spike_counts = np.array(self.count_spikes())
-        return np.where(spike_counts == num_spikes)[0]
+        return do_select_sweep_by_spike_count(spike_counts, num_spikes)
+    
 
     def select_sweep_by_sweep_time(self, stop_time, start_time = 0):
-        after_start_idx = np.where(self.sweep_time() > start_time)
-        before_stop_idx = np.where(self.sweep_time() < stop_time)
-        return np.intersect1d(after_start_idx, before_stop_idx) 
-    # move above to separate module 
+        """ 
+        Return sweep indices as np.array for sweeps that are within a certain sweep time.
+        """
+        return do_select_sweep_by_sweep_time(self.sweep_time(), stop_time, start_time)
+
 
     def plot_sweeps(self, sweep_indices, filepath):
         """Plot sweep with given sweep indices, save to filepath"""

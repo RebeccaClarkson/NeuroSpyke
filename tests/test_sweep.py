@@ -66,11 +66,14 @@ def test_select_sweep_by_current_inj():
 def test_select_sweep_by_spike_count():
     sweep_index = ex2.select_sweep_by_spike_count(3)
     assert type(sweep_index[0]) == np.int64
+    assert isinstance(sweep_index, np.ndarray)
     assert {14, 34}.issubset(sweep_index)
     assert 1 not in sweep_index
 
 def test_select_sweep_by_sweep_time():
     sweep_index = ex2.select_sweep_by_sweep_time(150)
+    assert type(sweep_index[0]) == np.int64
+    assert isinstance(sweep_index, np.ndarray)
     assert max(sweep_index) == 22
 
 def test_current_inj_waveforms():

@@ -49,3 +49,14 @@ def do_select_sweep_by_current_inj(all_waveforms_df, duration, amplitude):
     sweep_index = select_df['sweep_index']
     return np.array(sweep_index)
  
+def do_select_sweep_by_spike_count(spike_counts,  num_spikes):
+    """
+    Return sweep indices as np.array for sweeps that have a given number of APs
+    """
+    return np.where(spike_counts == num_spikes)[0]
+
+def do_select_sweep_by_sweep_time(sweep_time, stop_time, start_time = 0):
+    after_start_idx = np.where(sweep_time > start_time)
+    before_stop_idx = np.where(sweep_time < stop_time)
+    return np.intersect1d(after_start_idx, before_stop_idx) 
+
