@@ -11,8 +11,8 @@ def test_max_sweep_amplitude():
     max_amplitude = ex_5APsweep.max_sweep_amplitude()
     assert max_amplitude == 45.7
 
-def test_plot_response():
-    ex_5APsweep.plot_response(f"{image_save_filepath}response_plot.png")
+def test_plot():
+    ex_5APsweep.plot(f"{image_save_filepath}response_plot.png")
 
 def test_spike_points():
     spike_points = ex_5APsweep.spike_points()

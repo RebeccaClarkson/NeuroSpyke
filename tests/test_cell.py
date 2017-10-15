@@ -52,8 +52,6 @@ def test_count_spikes():
 def test_detect_spikes():
     pass
 
-def test_plot_sweeps():
-    pass
 
 
 def test_select_sweep_by_current_inj():
@@ -95,10 +93,9 @@ def test_selection_by_multiple_criteria():
     sweeps_to_plot = (intersect_all([idx1, idx2, idx3]))
     assert {16, 36, 37}.issubset(sweeps_to_plot)
     assert 1 not in sweeps_to_plot
-    ex2.plot_sweeps(sweeps_to_plot, f"{image_save_filepath}plot.png")    
     
     #ex_5APsweep = ex2.sweep(sweeps_to_plot[0])
     #ex_5APsweep.to_pickle("tests/data/5APsweep.pkl")
 
-def test_detect_spikes_using_response_class():
-    ex2.detect_spikes_using_response_class()
+def detect_spikes():
+    assert isinstance(ex2.detect_spikes(), list)

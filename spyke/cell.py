@@ -55,11 +55,11 @@ class Cell(object):
             'commands':commands
             })
 
-    def sweep_response(self, sweep_index):
+    def response(self, sweep_index):
         return Response(self.sweep(sweep_index))
 
-    def sweep_responses(self):
-        return [self.sweep_response(sweep_index) 
+    def responses(self):
+        return [self.response(sweep_index) 
                 for sweep_index in self.sweep_index_iter()]
 
     def sweep_time(self):
@@ -69,19 +69,8 @@ class Cell(object):
         return self.cell['sweep_time'][0, 0].flatten()
     
     def detect_spikes(self):
-        thresh = 20
-
-        def spike_points(sweep):
-            above_thresh = np.where(sweep[1:] > thresh) 
-            below_thresh = np.where(sweep[0:-1] <= thresh)
-            spike_points = np.intersect1d(above_thresh, below_thresh)
-            return spike_points
-
-        return [spike_points(sweep) for sweep in self.data()]
-
-    def detect_spikes_using_response_class(self):
         return [response.spike_points() 
-                for response in self.sweep_responses()]
+                for response in self.responses()]
 
     def count_spikes(self):
         return [len(spikes) for spikes in self.detect_spikes()]
@@ -122,25 +111,3 @@ class Cell(object):
         return do_select_sweep_by_sweep_time(self.sweep_time(), stop_time, start_time)
 
 
-    def plot_sweeps(self, sweep_indices, filepath):
-        """Plot sweep with given sweep indices, save to filepath"""
-
-        fig, (ax1, ax2) = plt.subplots(2, sharex=True)
-
-        for sweep_index in sweep_indices:
-            sweep_index = int(sweep_index)
-            sweep_df = self.sweep(sweep_index)
-            ax1.plot(sweep_df.time, sweep_df.data)
-            ax2.plot(sweep_df.time, sweep_df.commands)
-    
-        # set labels
-        ax1.set(title = f"sweep #{sweep_indices}")
-        ax1.set_ylabel('mV'); 
-        ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
-        
-        # set axes limits
-        ax1.set_xlim([0, 1]); ax1.set_ylim([-150, 50])
-        ax2.set_ylim([-400, 250])
-
-        # save figure
-        fig.savefig(filepath)
