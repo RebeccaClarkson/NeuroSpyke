@@ -6,6 +6,7 @@ from spyke.sweep_calculations import do_select_sweep_by_current_inj
 from spyke.sweep_calculations import do_select_sweep_by_spike_count
 from spyke.sweep_calculations import do_select_sweep_by_sweep_time
 import matplotlib as mpl
+from spyke.response import Response
 mpl.use('TkAgg')
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
@@ -33,8 +34,11 @@ class Cell(object):
     def nsweeps(self):
         return np.shape(self.data())[0]
 
+    def sweep_index_iter(self):
+        return range(self.nsweeps())
+
     def sweeps(self):
-        for i in range(self.nsweeps()):
+        for i in self.sweep_index_iter():
             yield self.sweep(i)
 
     def sweep(self, sweep_index):
@@ -50,6 +54,13 @@ class Cell(object):
             'data':data, 
             'commands':commands
             })
+
+    def sweep_response(self, sweep_index):
+        return Response(self.sweep(sweep_index))
+
+    def sweep_responses(self):
+        return [self.sweep_response(sweep_index) 
+                for sweep_index in self.sweep_index_iter()]
 
     def sweep_time(self):
         """
@@ -68,6 +79,10 @@ class Cell(object):
 
         return [spike_points(sweep) for sweep in self.data()]
 
+    def detect_spikes_using_response_class(self):
+        return [response.spike_points() 
+                for response in self.sweep_responses()]
+
     def count_spikes(self):
         return [len(spikes) for spikes in self.detect_spikes()]
 
@@ -84,7 +99,8 @@ class Cell(object):
 
     def select_sweep_by_current_inj(self, duration, amplitude):
         """
-        Return sweep indices as np.array for sweeps with duration/amplitude input parameters.
+        Return sweep indices as np.ndarray for sweeps with duration/amplitude 
+        input parameters.
         For returning all depol./hyperpol. current injections, amplitude = 1/-1.
         """
         all_waveforms_df = self.current_inj_waveforms()
@@ -93,7 +109,7 @@ class Cell(object):
    
     def select_sweep_by_spike_count(self, num_spikes):
         """
-        Return sweep indices as np.array for sweeps that have a given number of APs
+        Return sweep indices as np.ndarray for sweeps that have a given number of APs
         """
         spike_counts = np.array(self.count_spikes())
         return do_select_sweep_by_spike_count(spike_counts, num_spikes)
@@ -101,7 +117,7 @@ class Cell(object):
 
     def select_sweep_by_sweep_time(self, stop_time, start_time = 0):
         """ 
-        Return sweep indices as np.array for sweeps that are within a certain sweep time.
+        Return sweep indices as np.ndarray for sweeps that are within a certain sweep time.
         """
         return do_select_sweep_by_sweep_time(self.sweep_time(), stop_time, start_time)
 

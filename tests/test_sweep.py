@@ -1,6 +1,7 @@
 from spyke.cell import Cell
 import numpy as np
 import pandas as pd
+from utils import intersect_all
 
 ex1 = Cell("tests/data/ExampleCell1.mat")
 ex2 = Cell("tests/data/ExampleCell2.mat")
@@ -9,6 +10,7 @@ image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Pytho
 def test_time():
     time1 = ex1.time()
     time2 = ex2.time()
+    assert isinstance(time1, np.ndarray)
     assert np.shape(time1) == (68, 20000)
     assert np.shape(time2) == (43, 20000)
     for sweep in time1:
@@ -16,12 +18,14 @@ def test_time():
 
 def test_data():
     data = ex1.data()
+    assert isinstance(data, np.ndarray)
     assert np.shape(data) == (68, 20000)
     for sweep in data:
         assert len(sweep) == 20000
 
 def test_commands():
     commands1 = ex1.commands()
+    assert isinstance(commands1, np.ndarray)
     assert np.shape(commands1) == (68, 20000)
     for sweep in commands1:
         assert len(sweep) == 20000
@@ -91,17 +95,10 @@ def test_selection_by_multiple_criteria():
     sweeps_to_plot = (intersect_all([idx1, idx2, idx3]))
     assert {16, 36, 37}.issubset(sweeps_to_plot)
     assert 1 not in sweeps_to_plot
-    ex2.plot_sweeps(sweeps_to_plot, f"{image_save_filepath}plot")    
+    ex2.plot_sweeps(sweeps_to_plot, f"{image_save_filepath}plot.png")    
+    
+    #ex_5APsweep = ex2.sweep(sweeps_to_plot[0])
+    #ex_5APsweep.to_pickle("tests/data/5APsweep.pkl")
 
-def intersect_all(list_of_arrays):
-    """ Finds intersecting values of n np.arrays within a list """
-    for i in range(0, len(list_of_arrays)):
-        if i == 0:
-            intersection = np.intersect1d(
-                    list_of_arrays[0], list_of_arrays[1]
-                    )
-        if i < len(list_of_arrays)-1:
-            intersection_tmp = np.intersect1d(
-                    list_of_arrays[i], list_of_arrays[i+1])
-            intersection = np.intersect1d(intersection_tmp, intersection)
-    return intersection
+def test_detect_spikes_using_response_class():
+    ex2.detect_spikes_using_response_class()
