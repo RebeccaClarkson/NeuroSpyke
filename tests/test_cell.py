@@ -1,5 +1,5 @@
-from spyke.cell import Cell
-from spyke.sweep import Sweep
+from neurospyke.cell import Cell
+from neurospyke.sweep import Sweep
 import numpy as np
 
 ex1 = Cell("tests/data/ExampleCell1.mat")

@@ -1,4 +1,4 @@
-from spyke.response import Response
+from neurospyke.response import Response
 import matplotlib as mpl
 mpl.use('TkAgg')
 mpl.rcParams['axes.spines.right'] = False

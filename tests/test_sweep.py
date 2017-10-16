@@ -1,4 +1,4 @@
-from spyke.sweep import Sweep
+from neurospyke.sweep import Sweep
 import pandas as pd
 
 ex_5APsweep_df = pd.read_pickle("tests/data/5APsweep.pkl")

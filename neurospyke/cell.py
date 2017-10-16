@@ -1,7 +1,7 @@
 import scipy.io
 import numpy as np
 import pandas as pd
-from spyke.sweep import Sweep
+from neurospyke.sweep import Sweep
 
 np.set_printoptions(precision = 2, linewidth = 40, suppress = True)
 
