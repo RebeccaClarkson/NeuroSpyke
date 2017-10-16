@@ -2,3 +2,5 @@
 *.swp
 .cache
 __pycache__
+*.vim
+misc/
