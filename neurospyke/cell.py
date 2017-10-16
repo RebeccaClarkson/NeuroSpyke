@@ -7,10 +7,14 @@ np.set_printoptions(precision = 2, linewidth = 40, suppress = True)
 
 class Cell(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, experiment=None):
         self.filename = filename
         self.mat = scipy.io.loadmat(filename)
         self.cell = self.mat['Cell']
+        self.experiment = experiment
+    
+    def cell_name(self):
+        return self.cell['name'][0, 0][0]
 
     def time(self):
         return self.cell['time'][0,0].T
@@ -54,7 +58,7 @@ class Cell(object):
 
     def sweep(self, sweep_index):
         """ Create Sweep object for given sweep# """
-        return Sweep(self.sweep_df(sweep_index))
+        return Sweep(self.sweep_df(sweep_index), self)
 
     def sweeps(self):
         for i in self.sweep_index_iter():

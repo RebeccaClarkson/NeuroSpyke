@@ -32,3 +32,7 @@ def test_invalid_name_raises_exception():
         assert False
     except Exception as e:
         assert "calc_invalid_name" in str(e)
+
+def test_calc_properties():
+    assert isinstance(response_obj1.calc_properties(['num_spikes']), dict)
+    assert response_obj1.calc_properties(['num_spikes'])['num_spikes'] == 4
