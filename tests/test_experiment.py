@@ -1,8 +1,9 @@
 from neurospyke.experiment import Experiment
 
 data_dir_path = "/Users/Becky/Dropbox/Data_Science/Classification_in_Python/Python_Files/tests/data/"
-
-ex1 = Experiment([('num_spikes', 3)], ['num_spikes'])
+criteria = [('num_spikes', 3)]
+property_names = ['num_spikes', 'APmax_val', 'ISIs']
+ex1 = Experiment(criteria, property_names)
 
 def test_load_cells():
     #print(ex1.cells)
@@ -16,3 +17,5 @@ def test_run():
 
 def test_describe():
     print(ex1.describe())
+
+
