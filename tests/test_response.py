@@ -1,5 +1,6 @@
 from neurospyke.sweep import Sweep
 import pandas as pd
+import numpy as np
 
 ex_5APsweep_df = pd.read_pickle("tests/data/5APsweep.pkl")
 ex_2inj_sweep_df = pd.read_pickle("tests/data/ex_2inj_sweep.pkl")
@@ -25,17 +26,21 @@ def test_calc_num_spikes():
     num_spikes = response_obj_5AP.calc_num_spikes()
     assert num_spikes == 5
 
-def test_calculate_or_read_from_cache():
+def test_calc_curr_duration():
+    curr_duration = response_obj_5AP.calc_curr_duration()
+    print(curr_duration)
+
+def test_calc_or_read_from_cache():
     criteria = ['num_spikes']
     #response_obj1.debug_cache() 
     for criterion in criteria:
-        response_obj1.calculate_or_read_from_cache(criterion)
+        response_obj1.calc_or_read_from_cache(criterion)
         assert criterion in response_obj1._cache
     #response_obj1.debug_cache()
 
 def test_invalid_name_raises_exception():
     try: 
-        response_obj1.calculate_or_read_from_cache('invalid_name') 
+        response_obj1.calc_or_read_from_cache('invalid_name') 
         assert False
     except Exception as e:
         assert "calc_invalid_name" in str(e)
@@ -55,11 +60,11 @@ def test_calc_ISI():
 
 def test_calc_APmax_idx_and_val():
     results = response_obj1.calc_APmax_idx_and_val()
-    assert {2975, 3473, 5182, 7316}.issubset([idx for idx, val in results])
-    assert {47, 42, 44, 43}.issubset([round(val) for idx, val in results])
+    assert {2975, 3473, 5182, 7316}.issubset(results[0])
+    assert {47, 42, 44, 43}.issubset(np.around(results[1]))
 
     results = response_obj_5AP.calc_APmax_idx_and_val()
-    assert len(results) == 5
+    assert len(results[0]) == 5
 
 def test_calc_spike_time_windows():
     pass

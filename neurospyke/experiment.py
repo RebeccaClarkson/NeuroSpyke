@@ -12,9 +12,11 @@ class Experiment(object):
         paths = glob.glob(data_dir_path + "*.mat")
         self.cells.extend(Cell(path, self) for path in paths)
 
-    def run(self):
+    def run(self): 
         result = []
-        for cell in self.cells:
+        for cell in self.cells: 
+            # result.append(cell.run()), run method would know how to average
+            # loop within each class, aggregate for next level 
             for sweep in cell.sweeps():
                 for response in sweep.responses():
                     if response.meets_criteria():

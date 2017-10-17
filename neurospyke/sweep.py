@@ -9,7 +9,19 @@ class Sweep(object):
     def __init__(self, sweep_df, cell=None):
         self.sweep_df = sweep_df
         self.cell = cell
-        
+    
+    def time(self):
+        return self.sweep_df['time']
+
+    def data(self):
+        return self.sweep_df['data']
+
+    def commands(self):
+        return self.sweep_df['commands']
+
+    def sweep_index(self):
+        return self.sweep_df['sweep_index'][0]
+
     def current_inj_waveforms(self):
         """
         Returns a list with n dictionaries  where n = number of current injections.
@@ -17,14 +29,14 @@ class Sweep(object):
         curr_inj_waveform_list = []
         assert self.sweep_df['commands'][0] == 0
     
-        delta_commands = self.sweep_df['commands'].diff()
-        delta_commands[0] = 0
-        non_zero = delta_commands.nonzero()[0]
+        delta_curr = self.sweep_df['commands'].diff()
+        delta_curr[0] = 0
+        non_zero = delta_curr.nonzero()[0]
         num_commands = int(len(non_zero))
         assert num_commands % 2 == 0 # should have even number of command steps 
     
         for i in range(0, num_commands, 2): # verify these are symmetrical square waves pulses
-            assert delta_commands.iloc[non_zero].values[i] + delta_commands.iloc[non_zero].values[i+1] == 0
+            assert delta_curr.iloc[non_zero].values[i] + delta_curr.iloc[non_zero].values[i+1] == 0
     
             onset = non_zero[i]; offset = non_zero[i+1] 
 
