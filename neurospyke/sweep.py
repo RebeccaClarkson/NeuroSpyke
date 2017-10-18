@@ -4,12 +4,37 @@ mpl.use('TkAgg')
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 import matplotlib.pyplot as plt
+import pandas as pd
 
 class Sweep(object):
-    def __init__(self, sweep_df, cell=None):
+    def __init__(self, sweep_df, cell=None, property_names=None):
         self.sweep_df = sweep_df
         self.cell = cell
-    
+
+        if not property_names:
+            try:
+                self.property_names = self.cell.experiment.property_names
+            except Exception as e:
+                assert "'NoneType' object has no attribute 'experiment'" in str(e)
+                self.property_names = None
+        else:
+            self.property_names = property_names
+
+    def run(self):
+        """Results from sweep to pass to cell.run() """
+        results_df = pd.DataFrame() 
+        for response in self.responses():
+            if response.meets_criteria():
+                tmp_result = response.run()
+                results_df = pd.concat([results_df, tmp_result])
+        return results_df
+
+    def run_sweep(self):
+        """Results from this sweep for display (dataframe)"""
+        initial_results_df = self.run()
+        results_df = initial_results_df.assign(sweep_index=self.sweep_index())
+        return results_df
+                
     def time(self):
         return self.sweep_df['time']
 
@@ -59,7 +84,8 @@ class Sweep(object):
         return curr_inj_waveform_list
 
     def responses(self): 
-        return [Response(curr_inj_params, self) for curr_inj_params in self.current_inj_waveforms()]
+        return [Response(curr_inj_params, self, property_names=self.property_names) 
+                for curr_inj_params in self.current_inj_waveforms()]
 
     def plot(self, filepath):
         fig, (ax1, ax2) = plt.subplots(2, sharex=True)

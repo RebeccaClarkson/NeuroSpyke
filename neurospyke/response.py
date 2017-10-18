@@ -1,22 +1,22 @@
 import numpy as np
+import pandas as pd
 np.set_printoptions(precision = 2, linewidth = 40, suppress = True)
 
 class Response(object):
-
-    def __init__(self, curr_inj_params, sweep):
+    def __init__(self, curr_inj_params, sweep, property_names=None):
         self.curr_inj_params = curr_inj_params
         self.sweep = sweep
         self._cache = {}
 
-    def swp_data(self):
-        return self.sweep.sweep_df['data']
-
-    def swp_time(self):
-        return self.sweep.sweep_df['time']
-
-    def swp_commands(self):
-        return self.sweep.sweep_df['comm']
-
+        if not property_names:
+            try:
+                self.property_names = self.sweep.cell.experiment.property_names
+            except Exception as e:
+                assert "'NoneType' object has no attribute 'experiment'" in str(e)
+                self.property_names = None
+        else:
+            self.property_names = property_names
+        
     def calc_cell_name(self):
         return self.sweep.cell.cell_name()
 
@@ -34,13 +34,10 @@ class Response(object):
         return points_per_ms
 
     def meets_criteria(self):
-        for criterion in self.sweep.cell.experiment.criteria:
-            if self.meets_criterion(criterion):
-                print(f"for sweep {self.calc_sweep_index()}, cell {self.calc_cell_name()}:\n")
-                print(f"conditions are met")
-
+        #criteria = self.sweep.cell.experiment.criteria
+        criteria = [('curr_duration', .3), ('num_spikes', 5)]
         return all(self.meets_criterion(criterion)
-                for criterion in self.sweep.cell.experiment.criteria)
+                for criterion in criteria)
 
     def meets_criterion(self, criterion):
         attr_name, condition = criterion
@@ -112,16 +109,37 @@ class Response(object):
 
     def calc_ISIs(self):
         idxs = self.calc_or_read_from_cache('APmax_idx')
-        ISI_idx = np.diff(idxs) # ISI in idices 
+        ISI_idx = np.diff(idxs) # ISI in indices 
         ISI_ms = ISI_idx/self.calc_or_read_from_cache('points_per_ms') 
         return(ISI_ms)
 
-    def properties(self):
-        return self.calc_properties(self.sweep.cell.experiment.property_names)
+    def calc_doublet_index(self):
+        return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
+
+
+    def run(self):
+        """ Results from the response to pass to sweep.run() (dataframe)  """
+        #self.property_names=['ISIs', 'doublet_index']
+        results_dict = self.calc_properties(self.property_names)
+        initial_results_df = pd.DataFrame([results_dict])
+        return initial_results_df
+
+    def run_response(self):
+        """ Results from each response to display (dataframe) """
+        initial_results_df = self.run()
+        results_df = initial_results_df.assign(sweep_index=self.calc_sweep_index())
+        return results_df
 
     def calc_properties(self, property_names):
-        property_dict = {
-                property_name: self.calc_or_read_from_cache(property_name) 
-                for property_name in property_names
-                }
+
+        property_dict = {}
+        for property_name in property_names:
+            values = self.calc_or_read_from_cache(property_name)
+            if isinstance(values, int) or isinstance(values, float) or isinstance(values, np.int64):
+                tmp_dict = {property_name: values}
+                property_dict.update(tmp_dict)
+            else:
+                tmp_dict = {f"{property_name}{i}":values[i] for i in range(len(values))}
+                property_dict.update(tmp_dict)
         return property_dict 
+

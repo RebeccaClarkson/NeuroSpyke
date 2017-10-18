@@ -1,10 +1,12 @@
 from neurospyke.cell import Cell
 from neurospyke.sweep import Sweep
 import numpy as np
+import pandas as pd
 
-ex1 = Cell("tests/data/ExampleCell1.mat")
-ex2 = Cell("tests/data/ExampleCell2.mat")
+ex1 = Cell("tests/data/ExampleCell1.mat", property_names=['doublet_index', 'ISIs'])
+ex2 = Cell("tests/data/ExampleCell2.mat", property_names=['doublet_index', 'ISIs'])
 image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Python/Images/"
+
 
 def test_time():
     time1 = ex1.time()
@@ -47,3 +49,20 @@ def test_sweep_df():
     assert 'data' in sweep_df.columns
     assert 'commands' in sweep_df.columns
     assert 'sweep_time' in sweep_df.columns
+
+def test_run():
+    results1 = ex1.run()
+    results2 = ex2.run()
+    assert isinstance(results1, pd.DataFrame)
+    assert isinstance(results2, pd.DataFrame)
+    print(f"\nEx2 results for run() are \n{results2}")
+
+def test_run_cell():
+    results1 = ex1.run_cell()
+    assert isinstance(results1, pd.DataFrame)
+    results2 = ex2.run_cell() 
+    print(f"\nEx2 results for run_cell() are \n{results2}")
+
+def test_aggregate_results():
+    mean_df = ex2.aggregate_result()
+    print(f"\n The mean values are \n {mean_df}")

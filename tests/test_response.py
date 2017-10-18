@@ -1,4 +1,5 @@
 from neurospyke.sweep import Sweep
+from neurospyke.response import Response
 import pandas as pd
 import numpy as np
 
@@ -11,8 +12,10 @@ image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Pytho
 ex_5AP_sweep_obj = Sweep(ex_5APsweep_df)
 ex_2inj_sweep_obj = Sweep(ex_2inj_sweep_df)
 
+### Multiple ways to create a response object ### 
 response_obj1 = ex_2inj_sweep_obj.responses()[0]
-response_obj_5AP = ex_5AP_sweep_obj.responses()[0]
+response_obj_5AP = Response(curr_inj_params=ex_5AP_sweep_obj.current_inj_waveforms()[0],
+        sweep=ex_5AP_sweep_obj, property_names= [('num_spikes'), ('APmax_val')])  
 
 def test_calc_points_per_ms():
     points_per_ms = response_obj1.calc_points_per_ms()
@@ -66,6 +69,15 @@ def test_calc_APmax_idx_and_val():
     results = response_obj_5AP.calc_APmax_idx_and_val()
     assert len(results[0]) == 5
 
-def test_calc_spike_time_windows():
-    pass
-    #response_obj1.calc_spike_time_windows()
+def test_run():
+    results_df = response_obj_5AP.run()
+    assert isinstance(results_df, pd.DataFrame)
+    assert results_df.shape[0] == 1
+    print(f"\nResults of run: \n {results_df}")
+
+
+def test_run_response():
+    results_df = response_obj_5AP.run_response()
+    assert isinstance(results_df, pd.DataFrame)
+    assert results_df.shape[0] == 1
+    print(f"\nResults of run_response: \n\n {results_df}")
