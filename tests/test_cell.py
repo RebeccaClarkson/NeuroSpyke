@@ -1,10 +1,19 @@
-from neurospyke.cell import Cell
+from neurospyke.query import Query
 from neurospyke.sweep import Sweep
+from neurospyke.utils import load_cells
 import numpy as np
 import pandas as pd
 
-ex1 = Cell("tests/data/ExampleCell1.mat", property_names=['doublet_index', 'ISIs'])
-ex2 = Cell("tests/data/ExampleCell2.mat", property_names=['doublet_index', 'ISIs'])
+
+response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+response_properties = ['APmax_val', 'doublet_index']
+data_dir_path = "tests/data/*.mat"
+cells = load_cells(data_dir_path)
+query1 = Query(cells, response_criteria=response_criteria, 
+        response_properties=response_properties)
+query1.run()
+ex1 = query1.cells[0]
+ex2 = query1.cells[1]
 image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Python/Images/"
 
 
@@ -50,19 +59,25 @@ def test_sweep_df():
     assert 'commands' in sweep_df.columns
     assert 'sweep_time' in sweep_df.columns
 
+def test_response_properties_df():
+    results_df = ex1.response_properties_df()
+    assert isinstance(results_df, pd.DataFrame)
+    APmax_columns = [s for s in results_df.columns if 'APmax' in s]
+    assert len(APmax_columns) == 5
+    assert len(results_df.index) == 7 # 7 sweeps with 5 APs
+    print(f"""\n\nResponse properties dataframe for ex1 ({ex1.calc_cell_name()}) is: 
+            \n{results_df}""")
+
+def test_calc_mean_response_properties_df():
+    mean_df = ex1.calc_mean_response_properties_df()
+    assert isinstance(mean_df, pd.DataFrame)
+    assert len(mean_df.index) == 1
+    APmax_columns = [s for s in mean_df.columns if 'APmax' in s]
+    assert len(APmax_columns) == 5
+
 def test_run():
     results1 = ex1.run()
     results2 = ex2.run()
     assert isinstance(results1, pd.DataFrame)
     assert isinstance(results2, pd.DataFrame)
     print(f"\nEx2 results for run() are \n{results2}")
-
-def test_run_cell():
-    results1 = ex1.run_cell()
-    assert isinstance(results1, pd.DataFrame)
-    results2 = ex2.run_cell() 
-    print(f"\nEx2 results for run_cell() are \n{results2}")
-
-def test_aggregate_results():
-    mean_df = ex2.aggregate_result()
-    print(f"\n The mean values are \n {mean_df}")

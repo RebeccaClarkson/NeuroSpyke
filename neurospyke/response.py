@@ -1,53 +1,11 @@
 import numpy as np
 import pandas as pd
-np.set_printoptions(precision = 2, linewidth = 40, suppress = True)
 
 class Response(object):
-    def __init__(self, curr_inj_params, sweep, property_names=None):
+    def __init__(self, curr_inj_params, sweep):
         self.curr_inj_params = curr_inj_params
         self.sweep = sweep
         self._cache = {}
-
-        if not property_names:
-            try:
-                self.property_names = self.sweep.cell.experiment.property_names
-            except Exception as e:
-                assert "'NoneType' object has no attribute 'experiment'" in str(e)
-                self.property_names = None
-        else:
-            self.property_names = property_names
-        
-    def calc_cell_name(self):
-        return self.sweep.cell.cell_name()
-
-    def calc_sweep_index(self):
-        return self.sweep.sweep_index()
-
-    def calc_curr_duration(self):
-        return self.curr_inj_params['offset_time'] - self.curr_inj_params['onset_time']
-
-
-    def calc_points_per_ms(self):
-        """Calculate data acquisition sampling rate, in points per ms"""
-        delta_t_sec = self.sweep.time()[1]- self.sweep.time()[0]
-        points_per_ms = 1/(delta_t_sec * 1000) 
-        return points_per_ms
-
-    def meets_criteria(self):
-        #criteria = self.sweep.cell.experiment.criteria
-        criteria = [('curr_duration', .3), ('num_spikes', 5)]
-        return all(self.meets_criterion(criterion)
-                for criterion in criteria)
-
-    def meets_criterion(self, criterion):
-        attr_name, condition = criterion
-        value = self.calc_or_read_from_cache(attr_name)
-        if isinstance(condition, str):
-            # process condition of string
-            raise Exception("TODO implement")
-        else:
-            # use simple equality
-            return np.isclose(value, condition)
 
     def calc_or_read_from_cache(self, attr_name):
         if not attr_name in self._cache:
@@ -56,13 +14,54 @@ class Response(object):
             self._cache[attr_name] = value
         return self._cache[attr_name]
 
-    def reset_cache(self):
-        self._cache = {}
-    
     def debug_cache(self):
         print(f"Cache has {len(self._cache)} items.")
         for key, value in self._cache.items():
             print(f"key: {key} value: {value}")
+
+    def meets_criterion(self, criterion):
+        attr_name, condition = criterion
+        value = self.calc_or_read_from_cache(attr_name)
+        if isinstance(condition, str):
+            # process condition of string
+            # TODO implement
+            raise Exception("TODO")
+        else:
+            # use simple equality
+            return np.isclose(value, condition)
+
+    def meets_criteria(self):
+        criteria = self.sweep.cell.query.response_criteria
+        return all(self.meets_criterion(criterion)
+                for criterion in criteria.items())
+
+    def calc_properties(self, property_names):
+        property_dict = {}
+        for property_name in property_names:
+            property_value = self.calc_or_read_from_cache(property_name)
+            if isinstance(property_value, np.ndarray):
+                tmp_dict = {f"{property_name}{i}":item for i, item in enumerate(property_value)}
+            else:
+                tmp_dict = {property_name: property_value}
+            property_dict.update(tmp_dict)
+        return property_dict 
+
+    def run(self):
+        """ 
+        Returns a one row dataframe with data for all response_properties.
+        """
+        response_properties = self.sweep.cell.query.response_properties
+        results_dict = self.calc_properties(response_properties)
+        return pd.DataFrame([results_dict])
+
+    def calc_curr_duration(self):
+        return self.curr_inj_params['offset_time'] - self.curr_inj_params['onset_time']
+
+    def calc_points_per_ms(self):
+        """Calculate data acquisition sampling rate, in points per ms"""
+        delta_t_sec = self.sweep.time()[1]- self.sweep.time()[0]
+        points_per_ms = 1/(delta_t_sec * 1000) 
+        return points_per_ms
 
     def calc_spike_points(self):
         """ Calculates points where spikes occur (defined by voltage going  > -10 mV) """
@@ -79,7 +78,6 @@ class Response(object):
     def calc_APmax_idx_and_val(self):
         spike_points = self.calc_or_read_from_cache('spike_points')
         num_spikes = self.calc_or_read_from_cache('num_spikes')
-
         max_AP_idxs = []; max_AP_vals = []
 
         for i in range(num_spikes):
@@ -109,37 +107,10 @@ class Response(object):
 
     def calc_ISIs(self):
         idxs = self.calc_or_read_from_cache('APmax_idx')
-        ISI_idx = np.diff(idxs) # ISI in indices 
+        ISI_idx = np.diff(idxs)  
         ISI_ms = ISI_idx/self.calc_or_read_from_cache('points_per_ms') 
         return(ISI_ms)
 
     def calc_doublet_index(self):
         return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
-
-
-    def run(self):
-        """ Results from the response to pass to sweep.run() (dataframe)  """
-        #self.property_names=['ISIs', 'doublet_index']
-        results_dict = self.calc_properties(self.property_names)
-        initial_results_df = pd.DataFrame([results_dict])
-        return initial_results_df
-
-    def run_response(self):
-        """ Results from each response to display (dataframe) """
-        initial_results_df = self.run()
-        results_df = initial_results_df.assign(sweep_index=self.calc_sweep_index())
-        return results_df
-
-    def calc_properties(self, property_names):
-
-        property_dict = {}
-        for property_name in property_names:
-            values = self.calc_or_read_from_cache(property_name)
-            if isinstance(values, int) or isinstance(values, float) or isinstance(values, np.int64):
-                tmp_dict = {property_name: values}
-                property_dict.update(tmp_dict)
-            else:
-                tmp_dict = {f"{property_name}{i}":values[i] for i in range(len(values))}
-                property_dict.update(tmp_dict)
-        return property_dict 
 

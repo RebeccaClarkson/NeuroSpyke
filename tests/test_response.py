@@ -1,22 +1,32 @@
+from neurospyke.query import Query
 from neurospyke.sweep import Sweep
 from neurospyke.response import Response
+from neurospyke.utils import load_cells
 import pandas as pd
 import numpy as np
 
-ex_5APsweep_df = pd.read_pickle("tests/data/5APsweep.pkl")
-ex_2inj_sweep_df = pd.read_pickle("tests/data/ex_2inj_sweep.pkl")
-assert isinstance(ex_2inj_sweep_df, pd.DataFrame)
+response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+response_properties = ['APmax_val', 'doublet_index']
+data_dir_path = "tests/data/*.mat"
+cells = load_cells(data_dir_path)
+query1 = Query(cells, response_criteria=response_criteria, 
+        response_properties=response_properties)
+query1.run()
 
+cell1 = query1.cells[0]
+cell2 = query1.cells[1]
+
+ex_5APsweep_df = cell1.sweep_df(16)
+ex_2inj_sweep_df = cell2.sweep_df(0)
 image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Python/Images/"
 
-ex_5AP_sweep_obj = Sweep(ex_5APsweep_df)
-ex_2inj_sweep_obj = Sweep(ex_2inj_sweep_df)
 
-### Multiple ways to create a response object ### 
-response_obj1 = ex_2inj_sweep_obj.responses()[0]
-response_obj_5AP = Response(curr_inj_params=ex_5AP_sweep_obj.current_inj_waveforms()[0],
-        sweep=ex_5AP_sweep_obj, property_names= [('num_spikes'), ('APmax_val')])  
+ex_5AP_sweep_obj = Sweep(ex_5APsweep_df, cell=cell1)
+ex_2inj_sweep_obj = Sweep(ex_2inj_sweep_df, cell=cell2)
+response_obj1 = Response(ex_2inj_sweep_obj.current_inj_waveforms()[0], ex_2inj_sweep_obj)
+response_obj_5AP = Response(ex_5AP_sweep_obj.current_inj_waveforms()[0], ex_5AP_sweep_obj)
 
+ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
 def test_calc_points_per_ms():
     points_per_ms = response_obj1.calc_points_per_ms()
     assert points_per_ms == 20 
@@ -74,10 +84,3 @@ def test_run():
     assert isinstance(results_df, pd.DataFrame)
     assert results_df.shape[0] == 1
     print(f"\nResults of run: \n {results_df}")
-
-
-def test_run_response():
-    results_df = response_obj_5AP.run_response()
-    assert isinstance(results_df, pd.DataFrame)
-    assert results_df.shape[0] == 1
-    print(f"\nResults of run_response: \n\n {results_df}")
