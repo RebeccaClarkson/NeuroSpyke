@@ -79,15 +79,15 @@ class Sweep(object):
         fig, (ax1, ax2) = plt.subplots(2, sharex=True)
         ax1.plot(self.sweep_df.time, self.sweep_df.data)
         ax2.plot(self.sweep_df.time, self.sweep_df.commands)
-
+        
         # set labels
         ax1.set(title = f"sweep #{self.sweep_df.sweep_index[0]}")
         ax1.set_ylabel('mV'); 
         ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
         
         # set axes limits
-        ax1.set_xlim([0, 1]); ax1.set_ylim([-150, 50])
+        ax1.set_xlim([min(self.sweep_df.time), max(self.sweep_df.time)]); 
+        ax1.set_ylim([-150, 50])
         ax2.set_ylim([-400, 250])
-
         # save figure
         fig.savefig(filepath)

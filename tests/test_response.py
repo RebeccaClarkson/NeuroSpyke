@@ -7,7 +7,7 @@ import numpy as np
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
 response_properties = ['APmax_val', 'doublet_index']
-data_dir_path = "tests/data/*.mat"
+data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 query1 = Query(cells, response_criteria=response_criteria, 
         response_properties=response_properties)
@@ -18,7 +18,8 @@ cell2 = query1.cells[1]
 
 ex_5APsweep_df = cell1.sweep_df(16)
 ex_2inj_sweep_df = cell2.sweep_df(0)
-image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Python/Images/"
+
+image_save_filepath = "tests/data/images/"
 
 
 ex_5AP_sweep_obj = Sweep(ex_5APsweep_df, cell=cell1)

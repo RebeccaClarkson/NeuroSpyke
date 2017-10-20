@@ -2,7 +2,7 @@ import scipy.io
 import numpy as np
 import pandas as pd
 from neurospyke.sweep import Sweep
-
+from neurospyke.response import Response
 
 class Cell(object):
 
@@ -28,19 +28,63 @@ class Cell(object):
         for key, value in self._cache.items():
             print(f"key: {key} value: {value}")
 
-    def response_properties_df(self):
-        """
-        This method returns a dataframe with one row per response.
-        """
-        results_df = None
+    def valid_responses(self):
         for sweep in self.sweeps():
-            result_tmp_df = sweep.run()
-            if result_tmp_df is not None:
-                if results_df is None:
-                    results_df = result_tmp_df
-                else:
-                    results_df = pd.concat([results_df, result_tmp_df])
-        return results_df
+            for response in sweep.responses():
+                if response.meets_criteria():
+                    yield response
+
+    def response_properties_df(self):
+        df_list = [response.run() for response in self.valid_responses()]
+        if len(df_list) == 0:
+            return None
+        else:
+            return pd.concat(df_list)
+
+    def average_response(self):
+        """
+        Takes a mean of response data for all responses meeting the
+        response_criteria, used to calculate properties which need an 'average'
+        waveform.
+        """
+        waveforms_list = []
+
+        consistency_dict = {}
+
+        def verify_consistency(property_name, value):
+            if property_name not in consistency_dict:
+                #print(f"assigning to {property_name} value of {value}")
+                consistency_dict[property_name] = value
+            else:
+                #print(f"checking consistency of {property_name}")
+                assert consistency_dict[property_name] == value
+        left_window = 100
+        right_window = 100
+        for response in self.valid_responses():
+            verify_consistency('sampling_frequency', response.calc_points_per_ms())
+            verify_consistency('curr_duration', response.calc_curr_duration())
+            verify_consistency('curr_amplitude', response.amplitude)
+
+            window_df = response.window(left_window, right_window)
+            window_df['sweep_index'] = np.nan
+            waveforms_list.append(window_df)
+
+        windows_df = pd.concat(waveforms_list)
+
+        by_row_index = windows_df.groupby(windows_df.index)
+        window_df_means = by_row_index.mean()
+ 
+        pts_per_ms = response.calc_points_per_ms()
+        curr_inj_params = {
+                'onset_pnt': left_window * pts_per_ms,
+                'offset_pnt': len(window_df_means.index) - right_window * pts_per_ms,
+                'onset_time': None,
+                'offset_time': None, 
+                'amplitude': response.amplitude
+                }
+        # create 'sweep' and 'response' objects with this averaged df
+        average_sweep = Sweep(sweep_df=window_df_means)
+        return Response(curr_inj_params, average_sweep)
 
     def calc_mean_response_properties_df(self):
         """
@@ -72,6 +116,9 @@ class Cell(object):
         return cell_properties_df[property_names] 
 
     def combine_dfs(self, df1, df2):
+        """
+        This method returns a combined dataframe, with index values being cell names.
+        """
         if df1 is None:
             return df2
         elif df2 is None:
@@ -145,10 +192,9 @@ class Cell(object):
         for i in self.sweep_index_iter():
             yield self.sweep(i)
 
+
     def calc_sag_amplitude(self):
-        # TODO 
-        return 1
+        return self.average_response().calc_sag_amplitude()
 
     def calc_reb_delta_t(self):
-        # TODO
-        return 5
+        return self.average_response().calc_reb_delta_t()

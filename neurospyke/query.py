@@ -12,7 +12,6 @@ class Query(object):
 
         self.validate_parameters()   
 
-
     def validate_parameters(self):
         # TODO: ensure num_spikes criterion is set if spike properties in property names 
         pass 
@@ -26,14 +25,14 @@ class Query(object):
         cell.
         """
         mean_df=pd.DataFrame()
+        column_names = []
         df_list = []
         for cell in self.cells: 
             cell.query = self
-            df_list.append(cell.run())
-        # need to get column names from response that has all properties
-        # so that can use to preserve column order for display 
-        num_columns = [len(df.columns) for df in df_list]
-        column_names = df_list[num_columns.index(max(num_columns))].columns
+            cell_df = cell.run()
+            df_list.append(cell_df)
+            if len(cell_df.columns) > len(column_names):
+                column_names = cell_df.columns
         mean_df = pd.concat(df_list)
         return mean_df[column_names]
 

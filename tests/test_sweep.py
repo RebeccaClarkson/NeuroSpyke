@@ -1,13 +1,11 @@
 from neurospyke.query import Query
 from neurospyke.sweep import Sweep
-from neurospyke.response import Response
 from neurospyke.utils import load_cells
 import pandas as pd
-import numpy as np
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
 response_properties = ['APmax_val']
-data_dir_path = "tests/data/*.mat"
+data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 query1 = Query(cells, response_criteria=response_criteria, 
         response_properties=response_properties)
