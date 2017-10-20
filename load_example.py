@@ -2,7 +2,7 @@ from neurospyke.query import Query
 from neurospyke.utils import load_cells
 from neurospyke.utils import concat_dfs_by_index
 
-cell_file_pattern = 'tests/data/D1_and_D3_cells/*.mat' 
+cell_file_pattern = 'D1_and_D3_cells/*.mat' 
 D1_and_D3_cells = load_cells(cell_file_pattern)
 
 # Query 1 
@@ -31,5 +31,5 @@ reordered = important + [c for c in combined_df.columns if c not in important]
 D1_and_D3_df = combined_df[reordered]
 print(f"\n\nCombined query results:\n {D1_and_D3_df}")
 
-D1_and_D3_df.to_pickle('tests/data/D1_and_D3_cells/D1_and_D3_df')
+D1_and_D3_df.to_pickle('D1_and_D3_cells/D1_and_D3_df')
 

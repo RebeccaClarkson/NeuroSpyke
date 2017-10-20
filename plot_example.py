@@ -5,7 +5,7 @@ mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 import matplotlib.pyplot as plt
 
-D1_and_D3_df = pd.read_pickle('tests/data/D1_and_D3_cells/D1_and_D3_df')
+D1_and_D3_df = pd.read_pickle('D1_and_D3_cells/D1_and_D3_df')
 print(f"\n{D1_and_D3_df}")
 
 D1_cells = D1_and_D3_df[D1_and_D3_df['genetic_marker'] == 'D1']
