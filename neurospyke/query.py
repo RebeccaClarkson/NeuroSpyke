@@ -29,6 +29,7 @@ class Query(object):
         df_list = []
         for cell in self.cells: 
             cell.query = self
+            #print(f"Cell name is: {cell.calc_cell_name()}")
             cell_df = cell.run()
             df_list.append(cell_df)
             if len(cell_df.columns) > len(column_names):

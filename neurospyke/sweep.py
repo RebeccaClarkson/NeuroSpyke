@@ -49,8 +49,8 @@ class Sweep(object):
         for i in range(0, num_commands, 2): # verify these are symmetrical square waves pulses
             this_val = delta_curr.iloc[non_zero].values[i] 
             next_val = delta_curr.iloc[non_zero].values[i+1]
-            assert this_val == -next_val
     
+            assert this_val == -next_val
             onset = non_zero[i]; offset = non_zero[i+1] 
 
             onset_time = self.time().iloc[onset] 
