@@ -16,7 +16,7 @@ cell2 = query1.cells[1]
 
 ex_5APsweep_df = cell1.sweep_df(16)
 ex_2inj_sweep_df = cell2.sweep_df(0)
-image_save_filepath = "/Users/Becky/Dropbox/Data_Science/Classification_in_Python/Images/"
+image_save_filepath = "tests/data/images/"
 
 
 ex_5APsweep = Sweep(ex_5APsweep_df, cell=cell1)

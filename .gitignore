@@ -6,7 +6,6 @@ __pycache__
 misc/
 neurospyke/Curr_notes.txt
 tests/data/images/
-tests/data/initial_examples/
 tests/data/more_cells/
 tests/data/original_cell_files/
 tests/example_queries.py
