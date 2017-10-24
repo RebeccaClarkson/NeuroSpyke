@@ -70,7 +70,7 @@ Query 2 examines a hyperpolarization-related property, with criteria set as havi
     plt.savefig('docs/output/example_plot.png')
 ```
 
-![Example plot of data from queries](https://github.com/RebeccaClarkson/NeuroSpyke/docs/output/example_plot.png "Example plot of data from queries")
+![Example plot:](docs/output/example_plot.png "Example plot of data from queries")
 
 
 Copyright 2017, Rebecca L. Clarkson. All rights reserved.
