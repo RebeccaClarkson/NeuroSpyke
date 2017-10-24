@@ -1,20 +1,17 @@
-import neurospyke; neurospyke # hack to get default inits to run
+from neurospyke.utils import rgb_colors
 import pandas as pd
 import matplotlib.pyplot as plt
 from tabulate import tabulate
-from neurospyke.utils import rgb_colors
 
 example_cells_df = pd.read_pickle('docs/output/example_cells_df.pkl')
 print(f"\n{example_cells_df}")
 
+# Get tabular format for README file
 with open('docs/output/example_cell_table.txt', 'w') as outputfile:
         outputfile.write(tabulate(example_cells_df,headers='keys', tablefmt="pipe"))
 
-print(tabulate(example_cells_df.head(), headers='keys', tablefmt='pipe'))
-
 D1_cells = example_cells_df[example_cells_df['genetic_marker'] == 'D1']
 D3_cells = example_cells_df[example_cells_df['genetic_marker'] == 'D3']
-
 
 plt.figure()
 D1_plot = plt.scatter(D1_cells['doublet_index'], D1_cells['reb_delta_t'],
