@@ -30,6 +30,6 @@ important = ['genetic_marker', 'ca_buffer', 'num_spikes']
 reordered = important + [c for c in df1.columns if c not in important]
 example_cells_df = df1[reordered]
 example_cells_df = combined_df[reordered]
-print(f"\n\nCombined query results:\n {example_cells}")
+print(f"\n\nCombined query results:\n {example_cells_df}")
 
 example_cells_df.to_pickle('docs/output/example_cells_df.pkl')
