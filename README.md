@@ -20,7 +20,7 @@ Next, load cellular data that has been saved as .mat files.
 ### Query the electrophysiological properties of these cells. 
 #### Each Query can include both desired criteria and properties to be calculated.
 
-Query 1 examines action potential spiking properties, for electrophysiological sweeps that have .3 second current injection that elicited 5 spikes. For all sweeps that fit these criteria, this query determines the doublet index as well as number of spikes (which will of course in this case be directly determined by the criteria.
+Query 1 examines an action potential spiking property, for sweeps that have .3 second current injection eliciting  5 spikes. For each individual sweep that fit this criteria, this query determines the doublet index (ratio of 2nd and 1st inter-spike intervals). Returned dataframe has average of these calculations.
 ```python
     # Query 1 
     response_criteria = {'curr_duration':.3, 'num_spikes': 5}
@@ -29,7 +29,7 @@ Query 1 examines action potential spiking properties, for electrophysiological s
             response_properties=response_properties)
     df1 = query1.run()
 ```
-Query 2 examines hyperpolarization-related properties, in this case with a current duration of .12 seconds and a very large hyperpolarizing current injection (-400 pA). This query calculates the rebound time constant of the average response meeting these criteria, indicated by using "calculated_cell_properties." 
+Query 2 examines a hyperpolarization-related property, with criteria set as having a .12 second current injection and -400 pA current injection amplitude.  This query calculates the rebound time constant of the average of all responses meeting these criteria, indicated by using "calculated_cell_properties." 
 ```python
     # Query 2
     response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
