@@ -6,15 +6,24 @@ from neurospyke.response import Response
 
 class Cell(object):
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, response_criteria=None, response_properties=None, 
+            cell_criteria=None, cell_properties=None):
         self.file_path = file_path
         self.mat = scipy.io.loadmat(file_path)
         self.cell = self.mat['Cell']
         self.descriptive_cell_properties = ['genetic_marker', 'ca_buffer'] 
         self._cache = {}
 
+        self.response_criteria = response_criteria or {}
+        self.response_properties = response_properties or []
+        self.cell_criteria = cell_criteria or {}
+        self.cell_properties = cell_properties or []
+
     def cell_property_names(self):
-        return self.descriptive_cell_properties + self.query.cell_properties 
+        if hasattr(self, 'query'):
+            return self.descriptive_cell_properties + self.query.cell_properties
+        else:
+            return self.descriptive_cell_properties + self.cell_properties
 
     def calc_or_read_from_cache(self, attr_name):
         if not attr_name in self._cache:

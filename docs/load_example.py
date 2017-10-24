@@ -2,7 +2,6 @@ from neurospyke.query import Query
 from neurospyke.utils import load_cells
 from neurospyke.utils import concat_dfs_by_index
 from neurospyke.utils import reorder_df
-from tabulate import tabulate
 
 cell_file_pattern = 'docs/ExampleCells/*.mat' 
 example_cells = load_cells(cell_file_pattern)
@@ -26,7 +25,6 @@ combined_df = concat_dfs_by_index(df1, df2)
 example_cells_df = reorder_df(combined_df, ['genetic_marker', 'ca_buffer', 'num_spikes'])
 
 print(f"\n\nCombined query results:\n {example_cells_df}")
-print(tabulate(example_cells_df.head(), headers='keys', tablefmt='pipe'))
 
 # Save output dataframe
 example_cells_df.to_pickle('docs/output/example_cells_df.pkl')

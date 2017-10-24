@@ -2,9 +2,11 @@ import glob
 from neurospyke.cell import Cell
 import pandas as pd
 
-def load_cells(data_dir_path):
+def load_cells(data_dir_path, response_criteria=None, response_properties=None, 
+            cell_criteria=None, cell_properties=None):
     paths = glob.glob(data_dir_path)
-    return [Cell(path) for path in paths]
+    return [Cell(path, response_criteria=response_criteria, response_properties=response_properties, 
+        cell_criteria=cell_criteria, cell_properties=cell_properties) for path in paths]
 
 def concat_dfs_by_index(df1, df2):
     cols_to_use = df2.columns.difference(df1.columns)

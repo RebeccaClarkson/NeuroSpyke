@@ -1,4 +1,3 @@
-from neurospyke.query import Query
 from neurospyke.sweep import Sweep
 from neurospyke.utils import load_cells
 from neurospyke.response import Response
@@ -8,41 +7,32 @@ import pandas as pd
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
 response_properties = ['APmax_val', 'doublet_index']
 data_dir_path = "tests/data/initial_examples/*.mat"
-cells = load_cells(data_dir_path)
-query1 = Query(cells, response_criteria=response_criteria, 
-        response_properties=response_properties)
-query1.run()
-ex1 = query1.cells[0]
-ex2 = query1.cells[1]
+cells = load_cells(data_dir_path, response_criteria=response_criteria, response_properties=response_properties)
+ex1 = cells[0]
+ex2 = cells[1]
 
 image_save_filepath = "tests/data/images/"
 
 def test_calc_reb_delta_t():
     data_dir_path = "tests/data/more_cells/*.mat"
-    cells = load_cells(data_dir_path)
-    cells = [cells[0]]
     
     response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
     cell_properties = ['reb_delta_t']
 
-    query_reb = Query(cells, response_criteria=response_criteria, 
-            cell_properties=cell_properties)
-    query_reb.run()
-    reb_ex_cell = query_reb.cells[0]
+    cells = load_cells(data_dir_path, response_criteria=response_criteria, cell_properties=cell_properties)
+    reb_ex_cell = [cells[0]][0]
+
     reb_ex_cell.calc_reb_delta_t()
 
     
 def test_average_response():
     data_dir_path = "tests/data/more_cells/*.mat"
-    cells = load_cells(data_dir_path)
-
     response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
     cell_properties = ['reb_delta_t']
 
-    query_reb = Query(cells, response_criteria=response_criteria, 
-            cell_properties=cell_properties)
-    query_reb.run()
-    reb_ex_cell = query_reb.cells[0]
+    cells = load_cells(data_dir_path, response_criteria=response_criteria, cell_properties=cell_properties)
+
+    reb_ex_cell = [cells[0]][0]
     
     response_obj = reb_ex_cell.average_response()
     assert isinstance(response_obj, Response)

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 #import matplotlib.pyplot as plt
 class Response(object):
-    def __init__(self, curr_inj_params, sweep):
+    def __init__(self, curr_inj_params, sweep, response_properties=None, response_critiera=None):
         self.onset_pnt = int(curr_inj_params['onset_pnt'])
         self.offset_pnt = int(curr_inj_params['offset_pnt'])
         self.onset_time = curr_inj_params['onset_time']
@@ -10,6 +10,7 @@ class Response(object):
         self.amplitude = curr_inj_params['amplitude']
         self.sweep = sweep
         self._cache = {}
+
     
     def data(self):
         return self.sweep.sweep_df['data']
@@ -41,7 +42,11 @@ class Response(object):
             return np.isclose(value, condition)
 
     def meets_criteria(self):
-        criteria = self.sweep.cell.query.response_criteria
+        if hasattr(self.sweep.cell, 'query'):
+            criteria = self.sweep.cell.query.response_criteria
+        else: 
+            criteria = self.sweep.cell.response_criteria
+
         return all(self.meets_criterion(criterion)
                 for criterion in criteria.items())
 
@@ -60,7 +65,11 @@ class Response(object):
         """ 
         Returns a one row dataframe with data for all response_properties.
         """
-        response_properties = self.sweep.cell.query.response_properties
+        if hasattr(self.sweep.cell, 'query'):
+            response_properties = self.sweep.cell.query.response_properties
+        else:
+            response_properties = self.sweep.cell.response_properties
+
         results_dict = self.calc_properties(response_properties)
         return pd.DataFrame([results_dict])
 
