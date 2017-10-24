@@ -4,7 +4,7 @@
 ```python
 	from neurospyke.utils import load_cells
 	# filepath is location of .mat files
-	file_pattern = filepath + *.mat
+	file_pattern = filepath + "*.mat"
 	cells = load_cells(file_pattern)
 ```
 
