@@ -1,5 +1,6 @@
 # Python package for analysis of neuronal whole cell patch clamp electrophysiological data. 
 * see [NeuroClassify](github.com/RebeccaClarkson/NeuroClassify) for import to Matlab from Igor Pro
+* README code taken from load_example.py and plot_example.py
 
 First, import packages needed for these examples:
 ```python
