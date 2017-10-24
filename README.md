@@ -53,4 +53,24 @@ Query 2 examines a hyperpolarization-related property, with criteria set as havi
 | 040915-9 | D3               | EGTA        |            5 |         4.78366 |         28.15 |
 | 041015-3 | D3               | EGTA        |            5 |         2.52443 |         40.4  |
 
+### Plot the results of these queries
+```python
+    D1_cells = example_cells_df[example_cells_df['genetic_marker'] == 'D1']
+    D3_cells = example_cells_df[example_cells_df['genetic_marker'] == 'D3']
+
+    x1 = D1_cells['doublet_index']; y1 = D1_cells['reb_delta_t']
+    x2 = D3_cells['doublet_index']; y2 = D3_cells['reb_delta_t']
+
+    plt.figure()
+    plt.plot(x1, y1, 'ko', x2, y2, 'bo')
+    plt.xlabel('doublet index (ISI2/ISI1)')
+    plt.ylabel('rebound time constant (ms)')
+    plt.xlim([0,14]); plt.ylim([20, 50])
+    plt.legend({'D1', 'D3'})
+    plt.savefig('docs/output/example_plot.png')
+```
+
+![Example plot of data from queries](https://github.com/RebeccaClarkson/NeuroSpyke/docs/output/example_plot.png "Example plot of data from queries")
+
+
 Copyright 2017, Rebecca L. Clarkson. All rights reserved.
