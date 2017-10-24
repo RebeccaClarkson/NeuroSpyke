@@ -10,6 +10,8 @@ First, import packages needed for these examples:
     from neurospyke.utils import reorder_df
     from neurospyke.utils import rgb_colors
     from tabulate import tabulate
+    import pandas as pd
+    import matplotlib.pyplot as plt
 ```
 ### Import electrophysiological data from Matlab. 
 
