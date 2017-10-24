@@ -59,9 +59,6 @@ Query 2 examines a hyperpolarization-related property, with criteria set as havi
     D1_cells = example_cells_df[example_cells_df['genetic_marker'] == 'D1']
     D3_cells = example_cells_df[example_cells_df['genetic_marker'] == 'D3']
 
-    x1 = D1_cells['doublet_index']; y1 = D1_cells['reb_delta_t']
-    x2 = D3_cells['doublet_index']; y2 = D3_cells['reb_delta_t']
-
     plt.figure()
     D1_plot = plt.scatter(D1_cells['doublet_index'], D1_cells['reb_delta_t'],
             marker = 'o', color = 'k', label='D1')
