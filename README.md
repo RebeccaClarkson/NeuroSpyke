@@ -2,9 +2,9 @@
 ### Import electrophysiological data from Matlab 
 * see [NeuroClassify](github.com/RebeccaClarkson/NeuroClassify) for import to Matlab from Igor Pro
 ```python
-	from neurospyke.utils import load_cells
-        cell_file_pattern = 'docs/ExampleCells/*.mat' 
-        example_cells = load_cells(cell_file_pattern)
+    from neurospyke.utils import load_cells
+    cell_file_pattern = 'docs/ExampleCells/*.mat' 
+    example_cells = load_cells(cell_file_pattern)
 ```
 
 ### Query the electrophysiological properties of these cells.
