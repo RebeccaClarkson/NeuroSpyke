@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
 class Response(object):
     def __init__(self, curr_inj_params, sweep, response_properties=None, response_critiera=None):
         self.onset_pnt = int(curr_inj_params['onset_pnt'])
@@ -193,6 +194,7 @@ class Response(object):
         """
         max_rebound_amp = self.calc_or_read_from_cache('max_rebound_amp')
         steady_state_avg_amp = self.calc_or_read_from_cache('sag_steady_state_avg_amp')
+
         rebound_amp_change = max_rebound_amp - steady_state_avg_amp
         twenty_percent_rebound_voltage = steady_state_avg_amp + rebound_amp_change * 0.20
         eighty_percent_rebound_voltage = steady_state_avg_amp + rebound_amp_change * 0.80
@@ -203,11 +205,47 @@ class Response(object):
         closest_pnt80 = self.find_nearest_pnt_df(reb_data, 
                 eighty_percent_rebound_voltage)
 
-       # plt.figure()
-       # x1 = self.time(); y1 = self.data()
-       # x2 = self.time()[closest_pnt20:closest_pnt80]
-       # y2 = self.data()[closest_pnt20:closest_pnt80]
-       # plt.plot(x1, y1, x2, y2); plt.show()
+        self._cache['closest_pnt20'] = closest_pnt20
+        self._cache['closest_pnt80'] = closest_pnt80
 
         reb_delta_t = (closest_pnt80-closest_pnt20)/self.calc_or_read_from_cache('points_per_ms')
         return reb_delta_t 
+
+    def plot_response(self, filepath):
+        plt.figure()
+        x1 = self.time(); y1 = self.data()
+        plt.plot(x1, y1, color='k')
+        plt.xlabel('time (s)')
+        plt.ylabel('mV')
+        plt.savefig(filepath)
+
+    def plot_reb_delta_t(self, filepath):
+        self.plot_response()
+        self.calc_or_read_from_cache('reb_delta_t')
+        # These two values should be in cache when 'reb_delta_t' is in cache.
+        closest_pnt20 = self._cache['closest_pnt20']
+        closest_pnt80 = self._cache['closest_pnt80']
+
+        reb_calc_times = self.time()[closest_pnt20:closest_pnt80]
+        reb_calc_data = self.data()[closest_pnt20:closest_pnt80]
+        plt.plot(reb_calc_times, reb_calc_data, color = 'r'); 
+
+        # Add arrows to indicate where the measurements were taken from 
+        plt.annotate("", xy=(reb_calc_times.iloc[0], reb_calc_data.iloc[0]), 
+                xytext=(reb_calc_times.iloc[-1], reb_calc_data.iloc[0]),
+                arrowprops=dict(arrowstyle="<->"))
+        plt.annotate("", xy=(reb_calc_times.iloc[-1], reb_calc_data.iloc[0]), 
+                xytext=(reb_calc_times.iloc[-1], reb_calc_data.iloc[-1]),
+                arrowprops=dict(arrowstyle="<->"))
+
+        # Add text for the arrows, at the middle point of both
+        xmin, xmax = plt.xlim();
+        ymin, ymax = plt.ylim();
+        plt.annotate(r'$\Delta$t', 
+                xy=((reb_calc_times.iloc[0]+reb_calc_times.iloc[-1])/2, reb_calc_data.iloc[0]-.05*(ymax-ymin)), 
+                ha='center')
+        plt.annotate(r'$\Delta$amplitude', xy=(reb_calc_times.iloc[-1] + .02*(xmax-xmin), 
+            (reb_calc_data.iloc[0]+reb_calc_data.iloc[-1])/2 ), va='center')
+        plt.title(self.sweep.cell.calc_cell_name())
+        plt.savefig(filepath)
+        

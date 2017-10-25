@@ -92,7 +92,7 @@ class Cell(object):
                 'amplitude': response.amplitude
                 }
         # create 'sweep' and 'response' objects with this averaged df
-        average_sweep = Sweep(sweep_df=window_df_means)
+        average_sweep = Sweep(sweep_df=window_df_means, cell=self)
         return Response(curr_inj_params, average_sweep)
 
     def calc_mean_response_properties_df(self):
@@ -207,3 +207,7 @@ class Cell(object):
 
     def calc_reb_delta_t(self):
         return self.average_response().calc_reb_delta_t()
+ 
+
+    def plot_reb_delta_t(self, filepath):
+        return self.average_response().plot_reb_delta_t(filepath)

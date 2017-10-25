@@ -12,6 +12,7 @@ reb_query = Query(cells, response_criteria=response_criteria,
         cell_properties=cell_properties)
 reb_query.run()
 cell1 = reb_query.cells[0]
+print(cell1.calc_cell_name())
 
 reb_sweep_df = cell1.sweep_df(1)
 reb_sweep_obj = Sweep(reb_sweep_df, cell=cell1)

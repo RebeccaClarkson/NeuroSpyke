@@ -13,6 +13,29 @@ ex2 = cells[1]
 
 image_save_filepath = "tests/data/images/"
 
+def test_average_response():
+    data_dir_path = "tests/data/more_cells/*.mat"
+    image_save_dir = "tests/data/images/"
+    response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
+    cell_properties = ['reb_delta_t']
+
+    cells = load_cells(data_dir_path, response_criteria=response_criteria, cell_properties=cell_properties)
+
+    reb_ex_cell = [cells[0]][0]
+    
+    response_obj = reb_ex_cell.average_response()
+    assert isinstance(response_obj, Response)
+    assert response_obj.amplitude == -400
+    #response_obj.sweep.plot(image_save_filepath + 'test_average_response')
+
+    response_sweep_df = response_obj.sweep.sweep_df
+    assert np.isclose(response_sweep_df['sweep_time'][0], 174.43)
+
+    print(reb_ex_cell.calc_cell_name())
+    reb_ex_cell.plot_reb_delta_t(image_save_dir+'example_reb_detlta_t')
+    
+    assert False
+
 def test_calc_reb_delta_t():
     data_dir_path = "tests/data/more_cells/*.mat"
     
@@ -25,23 +48,6 @@ def test_calc_reb_delta_t():
     reb_ex_cell.calc_reb_delta_t()
 
     
-def test_average_response():
-    data_dir_path = "tests/data/more_cells/*.mat"
-    response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
-    cell_properties = ['reb_delta_t']
-
-    cells = load_cells(data_dir_path, response_criteria=response_criteria, cell_properties=cell_properties)
-
-    reb_ex_cell = [cells[0]][0]
-    
-    response_obj = reb_ex_cell.average_response()
-    assert isinstance(response_obj, Response)
-    assert response_obj.amplitude == -400
-    response_obj.sweep.plot(image_save_filepath + 'test_average_response')
-
-    response_sweep_df = response_obj.sweep.sweep_df
-    assert np.isclose(response_sweep_df['sweep_time'][0], 174.43)
-
 def test_time():
     time1 = ex1.time()
     time2 = ex2.time()

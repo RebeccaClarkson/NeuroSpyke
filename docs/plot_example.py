@@ -24,3 +24,4 @@ plt.ylabel('rebound time constant (ms)')
 plt.xlim([0,14]); plt.ylim([20, 50])
 plt.legend()
 plt.savefig('docs/output/example_plot.png')
+
