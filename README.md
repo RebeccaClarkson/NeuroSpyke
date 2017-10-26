@@ -42,6 +42,7 @@ Query 2 examines a hyperpolarization-related property, with criteria set as havi
             cell_properties=calculated_cell_properties)
     df2 = query2.run()
 ```
+
 ### Aggregate the results of both queries
 ```python
     combined_df = concat_dfs_by_index(df1, df2)                                                                                           
@@ -55,6 +56,9 @@ Query 2 examines a hyperpolarization-related property, with criteria set as havi
 | 040915-7 | D3               | EGTA        |            5 |         3.00712 |         32.45 |
 | 040915-9 | D3               | EGTA        |            5 |         4.78366 |         28.15 |
 | 041015-3 | D3               | EGTA        |            5 |         2.52443 |         40.4  |
+
+Example response used for reb_delta_t calculation: 
+![Example plot:](docs/output/example_reb_delta_t.png "Example response used for reb_delta_t calculation")
 
 ### Plot the results of these queries
 ```python
