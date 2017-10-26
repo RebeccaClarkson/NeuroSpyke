@@ -58,6 +58,10 @@ Query 2 examines a hyperpolarization-related property, with criteria set as havi
 | 041015-3 | D3               | EGTA        |            5 |         2.52443 |         40.4  |
 
 Example response used for reb_delta_t calculation: 
+```python
+    output_dir = 'docs/output/'
+    query2.cells[0].plot_reb_delta_t(output_dir + 'example_reb_delta_t.png') 
+```
 ![Example plot:](docs/output/example_reb_delta_t.png "Example response used for reb_delta_t calculation")
 
 ### Plot the results of these queries
