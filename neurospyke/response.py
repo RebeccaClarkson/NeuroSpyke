@@ -86,6 +86,10 @@ class Response(object):
         points_per_ms = 1/(delta_t_sec * 1000) 
         return int(points_per_ms)
 
+    def calc_ms_per_point(self):
+        points_per_ms = 1/self.calc_or_read_from_cache('points_per_ms')
+        return points_per_ms
+
     def window(self, left_window=50, right_window=50):
         """
         Returns a dataframe of the sweep_df format with only the specified
@@ -141,18 +145,86 @@ class Response(object):
             # append values
             max_AP_vals.append(max_val)
             max_AP_idxs.append(max_idx)
-        return max_AP_idxs, max_AP_vals
+        return np.array(max_AP_idxs), np.array(max_AP_vals)
 
-    def calc_APmax_val(self):
+    def calc_APmax_vals(self):
         _, vals = self.calc_or_read_from_cache('APmax_idx_and_val')
         return np.array(vals)
 
-    def calc_APmax_idx(self):
+    def calc_APmax_idxs(self):
         idxs, _ = self.calc_or_read_from_cache('APmax_idx_and_val')
         return np.array(idxs)
 
+        
+    def calc_AHP_idx_and_vals(self):
+        num_spikes = self.calc_or_read_from_cache('num_spikes')
+        APmax_idxs = self.calc_or_read_from_cache('APmax_idxs')
+        
+        AHP_idxs = []; AHP_vals = []
+        for i in range(num_spikes-1):
+            # find min voltage that occurs between given AP max and next AP max
+            start_idx = APmax_idxs[i]
+            stop_idx = APmax_idxs[i+1]
+            min_idx = np.argmin(self.sweep.data()[start_idx:stop_idx])
+            min_val = self.sweep.data()[min_idx]
+            
+            # append values
+            AHP_vals.append(min_val)
+            AHP_idxs.append(min_idx)
+        return np.array(AHP_idxs), np.array(AHP_vals)
+
+    def calc_AHP_vals(self):
+        _, vals = self.calc_or_read_from_cache('AHP_idx_and_vals')
+        return np.array(vals)
+
+    def calc_AHP_idxs(self):
+        idxs, _ = self.calc_or_read_from_cache('AHP_idx_and_vals')
+        return np.array(idxs)
+
+
+    def calc_dVdt_mV_per_ms(self):
+        return np.gradient(self.data(), self.calc_or_read_from_cache('ms_per_point'))
+
+    def calc_threshold_idx_and_vals(self):
+        """
+        Threshold is defined as the voltage after which dVdt is > 15 mV/ms
+        """
+        num_spikes = self.calc_or_read_from_cache('num_spikes')
+        dVdt = self.calc_or_read_from_cache('dVdt_mV_per_ms')
+        AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
+        AHP_idx = self.calc_or_read_from_cache('AHP_idxs')  
+        thresh_idxs = []; thresh_vals = [];
+        for i in range(num_spikes):
+            if i == 0:
+                start_idx = self.onset_pnt
+            else: 
+                start_idx = AHP_idx[i-1]
+            stop_idx = AP_max_idx[i] 
+            
+            thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1 
+            
+            thresh_idxs.append(thresh_idx)
+            thresh_vals.append(self.sweep.data()[thresh_idx])
+        return np.array(thresh_idxs), np.array(thresh_vals)
+
+    def calc_threshold_idxs(self):
+        idxs, _ = self.calc_or_read_from_cache('threshold_idx_and_vals')
+        return np.array(idxs)
+
+    def calc_threshold_vals(self):
+        _, vals = self.calc_or_read_from_cache('threshold_idx_and_vals')
+        return np.array(vals)
+
+    def calc_delta_thresh(self):
+        """
+        This method returns the change in threshold for each AP compared to the
+        first AP of the response.
+        """
+        threshold_vals = self.calc_threshold_vals()
+        return np.array(threshold_vals - threshold_vals[0])
+
     def calc_ISIs(self):
-        idxs = self.calc_or_read_from_cache('APmax_idx')
+        idxs = self.calc_or_read_from_cache('APmax_idxs')
         ISI_idx = np.diff(idxs)  
         ISI_ms = ISI_idx/self.calc_or_read_from_cache('points_per_ms') 
         return(ISI_ms)
@@ -220,7 +292,7 @@ class Response(object):
         plt.savefig(filepath)
 
     def plot_reb_delta_t(self, filepath):
-        self.plot_response()
+        self.plot_response(filepath)
         self.calc_or_read_from_cache('reb_delta_t')
         # These two values should be in cache when 'reb_delta_t' is in cache.
         closest_pnt20 = self._cache['closest_pnt20']

@@ -21,7 +21,7 @@ def test_query_with_descriptive_cell_properties():
 
 def test_query_with_numeric_response_criteria_and_properties():
     response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-    response_properties = ['APmax_val', 'doublet_index']
+    response_properties = ['APmax_vals', 'doublet_index']
     ex1 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
     df = ex1.run()
@@ -34,7 +34,7 @@ def test_query_with_numeric_response_criteria_and_properties():
 
 def test_query_with_no_responses():
     response_criteria = {'curr_duration': .3, 'num_spikes': 4}
-    response_properties = ['num_spikes', 'APmax_val', 'doublet_index']
+    response_properties = ['num_spikes', 'APmax_vals', 'doublet_index']
     ex2 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
     df2 = ex2.run()
@@ -42,14 +42,14 @@ def test_query_with_no_responses():
 
 def test_combining_queries():
     response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-    response_properties = ['num_spikes','APmax_val', 'doublet_index']
+    response_properties = ['num_spikes','APmax_vals', 'doublet_index']
     ex1 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
     df1 = ex1.run()
     #print(f"\n\nQuery 1 is: \n{df1}")
     
     response_criteria = {'curr_duration': .3, 'num_spikes': 6}
-    response_properties = ['num_spikes', 'APmax_val', 'doublet_index']
+    response_properties = ['num_spikes', 'APmax_vals', 'doublet_index']
     ex2 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
     df2 = ex2.run()
@@ -62,7 +62,7 @@ def test_combining_queries():
     print(f"\n\nCombined query results:\n {combined_df}")
     
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-response_properties = ['num_spikes', 'APmax_val', 'doublet_index']
+response_properties = ['num_spikes', 'APmax_vals', 'doublet_index']
 ex1 = Query(cells, response_criteria=response_criteria, 
         response_properties=response_properties)
 

@@ -4,7 +4,7 @@ from neurospyke.utils import load_cells
 import pandas as pd
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-response_properties = ['APmax_val']
+response_properties = ['APmax_vals']
 data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 query1 = Query(cells, response_criteria=response_criteria, 

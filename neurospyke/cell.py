@@ -102,6 +102,7 @@ class Cell(object):
         response.
         """
         response_df = self.response_properties_df()
+        print(f"\n\n{response_df}")
         if response_df is not None:
             mean_series = response_df.mean()
             mean_response_df = pd.DataFrame(

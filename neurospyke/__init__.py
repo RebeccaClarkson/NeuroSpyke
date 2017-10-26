@@ -12,4 +12,4 @@ mpl.rcParams['axes.spines.top'] = False
 
 import pandas as pd
 print("Settings defaults for pandas")
-pd.set_eng_float_format(accuracy=2, use_eng_prefix=True)
+pd.set_option('precision', 3)

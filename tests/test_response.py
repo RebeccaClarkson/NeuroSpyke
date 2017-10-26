@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-response_properties = ['APmax_val', 'doublet_index']
+response_properties = ['APmax_vals', 'doublet_index']
 data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 query1 = Query(cells, response_criteria=response_criteria, 
@@ -17,17 +17,42 @@ cell1 = query1.cells[0]
 cell2 = query1.cells[1]
 
 ex_5APsweep_df = cell1.sweep_df(16)
+
 ex_2inj_sweep_df = cell2.sweep_df(0)
 
 image_save_filepath = "tests/data/images/"
 
 
-ex_5AP_sweep_obj = Sweep(ex_5APsweep_df, cell=cell1)
-ex_2inj_sweep_obj = Sweep(ex_2inj_sweep_df, cell=cell2)
+ex_5AP_sweep_obj = Sweep(ex_5APsweep_df, cell=cell1) # cell_name = 010417-1, sweep_idx = 16 (sweep 17)
+ex_2inj_sweep_obj = Sweep(ex_2inj_sweep_df, cell=cell2) # cell_name = 041015A, sweep_idx = 0 (sweep 1)
 response_obj1 = Response(ex_2inj_sweep_obj.current_inj_waveforms()[0], ex_2inj_sweep_obj)
 response_obj_5AP = Response(ex_5AP_sweep_obj.current_inj_waveforms()[0], ex_5AP_sweep_obj)
 
-ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
+#ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
+
+def test_calc_delta_thresh():
+    calc_vals = response_obj_5AP.calc_delta_thresh()
+    print(calc_vals)
+    known_vals = np.array([0, 2.3400, 1.1733, 0.7800, 1.1733])
+    assert np.allclose(calc_vals, known_vals, atol=1e-4)
+
+
+
+def test_calc_threshold_and_vals():
+    calc_idxs, calc_vals = response_obj_5AP.calc_threshold_idx_and_vals()
+    known_idxs = np.array([2796, 3091, 4050, 5328, 6828])
+    known_vals = np.array([-43.5533, -41.2133, -42.3800, -42.7733, -42.3800])
+    assert np.allclose(calc_idxs, known_idxs)
+    assert np.allclose(calc_vals, known_vals)
+
+def test_calc_AHP_idx_and_val():
+    calc_idx, calc_vals = response_obj_5AP.calc_AHP_idx_and_vals()
+
+    known_vals = np.array([-47.7533, -47.8533,-50.1000, -51.2667])
+    assert np.allclose(calc_vals, known_vals)
+    known_idx = np.array([2863, 3528, 4342, 5810])
+    assert np.allclose(calc_idx, known_idx)
+
 def test_calc_points_per_ms():
     points_per_ms = response_obj1.calc_points_per_ms()
     assert points_per_ms == 20 
