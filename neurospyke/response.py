@@ -12,7 +12,6 @@ class Response(object):
         self.sweep = sweep
         self._cache = {}
 
-    
     def data(self):
         return self.sweep.sweep_df['data']
 
@@ -43,10 +42,7 @@ class Response(object):
             return np.isclose(value, condition)
 
     def meets_criteria(self):
-        if hasattr(self.sweep.cell, 'query'):
-            criteria = self.sweep.cell.query.response_criteria
-        else: 
-            criteria = self.sweep.cell.response_criteria
+        criteria = self.sweep.cell.query.response_criteria
 
         return all(self.meets_criterion(criterion)
                 for criterion in criteria.items())
@@ -66,11 +62,7 @@ class Response(object):
         """ 
         Returns a one row dataframe with data for all response_properties.
         """
-        if hasattr(self.sweep.cell, 'query'):
-            response_properties = self.sweep.cell.query.response_properties
-        else:
-            response_properties = self.sweep.cell.response_properties
-
+        response_properties = self.sweep.cell.query.response_properties
         results_dict = self.calc_properties(response_properties)
         return pd.DataFrame([results_dict])
 
@@ -201,6 +193,7 @@ class Response(object):
                 start_idx = AHP_idx[i-1]
             stop_idx = AP_max_idx[i] 
             
+            #TODO assert that monotonically increasing?
             thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1 
             
             thresh_idxs.append(thresh_idx)

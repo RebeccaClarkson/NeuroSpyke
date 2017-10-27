@@ -1,5 +1,6 @@
 from neurospyke.sweep import Sweep
 from neurospyke.utils import load_cells
+from neurospyke.query import Query
 from neurospyke.response import Response
 import numpy as np
 import pandas as pd
@@ -7,22 +8,36 @@ import pandas as pd
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
 response_properties = ['APmax_vals', 'doublet_index', 'delta_thresh']
 data_dir_path = "tests/data/initial_examples/*.mat"
-cells = load_cells(data_dir_path, response_criteria=response_criteria, response_properties=response_properties)
-ex1 = cells[0]
-ex2 = cells[1]
+cells = load_cells(data_dir_path)
+query = Query(cells, response_criteria=response_criteria, response_properties=response_properties)
+query.run()
+ex1 = query.cells[0]
+ex2 = query.cells[1]
 
 image_save_filepath = "tests/data/images/"
 
+def test_calc_reb_delta_t():
+    data_dir_path = "tests/data/more_cells/*.mat"
+    
+    response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
+    cell_properties = ['reb_delta_t']
+
+    cells = load_cells(data_dir_path)
+    query = Query(cells, response_criteria=response_criteria, cell_properties=cell_properties)
+    query.run()
+    reb_ex_cell = [query.cells[0]][0]
+
+    reb_ex_cell.calc_reb_delta_t()
 
 def test_calc_mean_response_properties_df():
 
     response_criteria = {'curr_duration': .3, 'num_spikes': 5}
     response_properties = ['delta_thresh']
     data_dir_path = "tests/data/initial_examples/*.mat"
-    cells = load_cells(data_dir_path, 
-            response_criteria=response_criteria, 
-            response_properties=response_properties)
-    ex1 = cells[0]
+    cells = load_cells(data_dir_path)
+    query = Query(cells, response_criteria=response_criteria, response_properties=response_properties)
+    query.run()
+    ex1 = query.cells[0]
 
     mean_df = ex1.calc_mean_response_properties_df()
     assert isinstance(mean_df, pd.DataFrame)
@@ -38,9 +53,11 @@ def test_average_response():
     response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
     cell_properties = ['reb_delta_t']
 
-    cells = load_cells(data_dir_path, response_criteria=response_criteria, cell_properties=cell_properties)
+    cells = load_cells(data_dir_path)
 
-    reb_ex_cell = [cells[0]][0]
+    query = Query(cells, response_criteria=response_criteria, cell_properties=cell_properties)
+    query.run()
+    reb_ex_cell = [query.cells[0]][0]
     
     response_obj = reb_ex_cell.average_response()
     assert isinstance(response_obj, Response)
@@ -53,17 +70,6 @@ def test_average_response():
     print(reb_ex_cell.calc_cell_name())
     reb_ex_cell.plot_reb_delta_t(image_save_dir+'example_reb_detlta_t')
     
-
-def test_calc_reb_delta_t():
-    data_dir_path = "tests/data/more_cells/*.mat"
-    
-    response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
-    cell_properties = ['reb_delta_t']
-
-    cells = load_cells(data_dir_path, response_criteria=response_criteria, cell_properties=cell_properties)
-    reb_ex_cell = [cells[0]][0]
-
-    reb_ex_cell.calc_reb_delta_t()
 
     
 def test_time():

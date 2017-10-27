@@ -15,7 +15,7 @@ query1 = Query(example_cells, response_criteria=response_criteria,
 df1 = query1.run()
 
 # Plot example 5 AP sweep
-#TODO 
+#TODO attach to attribute of query1?
 
 # Query 2
 response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}

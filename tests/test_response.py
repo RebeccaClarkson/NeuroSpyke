@@ -36,8 +36,6 @@ def test_calc_delta_thresh():
     known_vals = np.array([0, 2.3400, 1.1733, 0.7800, 1.1733])
     assert np.allclose(calc_vals, known_vals, atol=1e-4)
 
-
-
 def test_calc_threshold_and_vals():
     calc_idxs, calc_vals = response_obj_5AP.calc_threshold_idx_and_vals()
     known_idxs = np.array([2796, 3091, 4050, 5328, 6828])

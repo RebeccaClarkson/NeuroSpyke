@@ -4,8 +4,16 @@ from neurospyke.utils import load_cells
 import pandas as pd
 
 data_dir_path = "tests/data/initial_examples/*.mat"
+#data_dir_path = "docs/ExampleCells/*.mat"
 cells = load_cells(data_dir_path)
 
+def test_query_id():
+    print(ex1.query_id())
+    print(str(ex1.query_id()))
+    print(type(str(ex1.query_id())))
+
+def test_hex_digest():
+    print(ex1.hex_digest())
 
 def test_load_cells():
     assert isinstance(cells[0], Cell)
@@ -78,3 +86,5 @@ def test_query_with_calculated_cell_properties():
     #calculated_cell_properties = ['sag_amplitude']
     #response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
     pass
+
+
