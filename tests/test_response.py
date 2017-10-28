@@ -43,6 +43,12 @@ def test_calc_threshold_and_vals():
     assert np.allclose(calc_idxs, known_idxs)
     assert np.allclose(calc_vals, known_vals)
 
+def test_AP_amplitudes():
+    calc_vals = response_obj_5AP.calc_AP_amplitudes()
+    known_vals = np.array([91.7933, 85.3533, 89.0600, 89.0600, 88.3733])
+    assert np.allclose(calc_vals, known_vals)
+
+
 def test_calc_AHP_idx_and_val():
     calc_idx, calc_vals = response_obj_5AP.calc_AHP_idx_and_vals()
 

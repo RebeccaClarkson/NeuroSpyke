@@ -111,7 +111,15 @@ class Response(object):
         above_thresh = np.where(self.sweep.data()[1:] > thresh)           
         below_thresh = np.where(self.sweep.data()[0:-1] <= thresh)
         spike_points = np.intersect1d(above_thresh, below_thresh)
-        return spike_points
+
+        all_spike_points_during_current_injection = all(spike_point 
+                in range(self.onset_pnt, self.offset_pnt) 
+                for spike_point in spike_points)
+        if all_spike_points_during_current_injection: 
+            return spike_points
+        else:
+            # if there are spikes outside of current injection, don't analyze
+            return []
 
     def calc_num_spikes(self):
         spike_points = self.calc_or_read_from_cache('spike_points')
@@ -123,7 +131,6 @@ class Response(object):
         max_AP_idxs = []; max_AP_vals = []
 
         for i in range(num_spikes):
-
             if i < num_spikes-1:
                 stop_idx = spike_points[i+1]
             else:
@@ -186,6 +193,7 @@ class Response(object):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
         AHP_idx = self.calc_or_read_from_cache('AHP_idxs')  
         thresh_idxs = []; thresh_vals = [];
+
         for i in range(num_spikes):
             if i == 0:
                 start_idx = self.onset_pnt
@@ -207,6 +215,12 @@ class Response(object):
     def calc_threshold_vals(self):
         _, vals = self.calc_or_read_from_cache('threshold_idx_and_vals')
         return np.array(vals)
+    
+    def calc_AP_amplitudes(self):
+        AP_max = self.calc_or_read_from_cache('APmax_vals')
+        threshold = self.calc_or_read_from_cache('threshold_vals')
+        return np.array(AP_max - threshold)
+
 
     def calc_delta_thresh(self):
         """

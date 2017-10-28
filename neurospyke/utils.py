@@ -31,7 +31,9 @@ def load_cell(mat_cell_path):
 
 def load_cells(data_dir_path):
     paths = glob.glob(data_dir_path)
-    return [load_cell(path) for path in paths]
+    cells = [load_cell(path) for path in paths]
+    assert len(cells)>0, f"no cells were found in {data_dir_path}"
+    return cells
 
 def concat_dfs_by_index(df1, df2):
     cols_to_use = df2.columns.difference(df1.columns)
