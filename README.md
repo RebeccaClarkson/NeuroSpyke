@@ -29,18 +29,18 @@ Query 1 examines an action potential spiking property, for sweeps that have .3 s
     # Query 1 
     response_criteria = {'curr_duration':.3, 'num_spikes': 5}
     response_properties = ['doublet_index', 'num_spikes']
-    query1 = Query(example_cells, response_criteria=response_criteria, 
+    query1 = Query.create_or_load_from_cache(example_cells, response_criteria=response_criteria, 
             response_properties=response_properties)
-    df1 = query1.run()
+    df1 = query1.mean_df
 ```
 Query 2 examines a hyperpolarization-related property, with criteria set as having a .12 second/-400 pA current injection. This query calculates the rebound time constant of the average of all responses meeting these criteria, indicated by using "calculated_cell_properties." 
 ```python
     # Query 2
     response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
     calculated_cell_properties = ['reb_delta_t'] 
-    query2 = Query(example_cells, response_criteria=response_criteria, 
+    query2 = Query.create_or_load_from_cache(example_cells, response_criteria=response_criteria, 
             cell_properties=calculated_cell_properties)
-    df2 = query2.run()
+    df2 = query2.mean_df
 ```
 
 ### Aggregate the results of both queries
