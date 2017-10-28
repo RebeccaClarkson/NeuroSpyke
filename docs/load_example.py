@@ -10,9 +10,9 @@ example_cells = load_cells(cell_file_pattern)
 # Query 1 
 response_criteria = {'curr_duration':.3, 'num_spikes': 5}
 response_properties = ['doublet_index', 'num_spikes']
-query1 = Query(example_cells, response_criteria=response_criteria, 
+query1 = Query.create_or_load_from_cache(example_cells, response_criteria=response_criteria, 
         response_properties=response_properties)
-df1 = query1.run()
+df1 = query1.mean_df
 
 # Plot example 5 AP sweep
 #TODO attach to attribute of query1?
@@ -20,10 +20,9 @@ df1 = query1.run()
 # Query 2
 response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
 calculated_cell_properties = ['reb_delta_t'] 
-query2 = Query(example_cells, response_criteria=response_criteria, 
+query2 = Query.create_or_load_from_cache(example_cells, response_criteria=response_criteria, 
         cell_properties=calculated_cell_properties)
-df2 = query2.run()
-
+df2 = query2.mean_df
 
 # Plot example reb_delta_t sweep  
 query2.cells[0].plot_reb_delta_t(output_dir + 'example_reb_delta_t.png')

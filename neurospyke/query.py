@@ -1,6 +1,8 @@
 import pandas as pd
 import hashlib
 import pickle
+import os
+from neurospyke.utils import query_cache_dir
 
 class Query(object):
     def __init__(self, cells, response_criteria=None, response_properties=None, 
@@ -13,6 +15,25 @@ class Query(object):
         self.cell_properties = cell_properties or []
 
         self.validate_parameters()   
+
+    @classmethod
+    def create_or_load_from_cache(cls, cells, **kwargs):
+        # make an instance of query to have access to instance methods, this
+        # will be the actual query object we use if it's not in the cache
+        tmp_query = cls(cells, **kwargs)
+        try:
+            # load from cache, if all goes well, return the cached version
+            query = cls.load_query(tmp_query.query_cache_filename())
+            query.cells = cells
+            for cell in query.cells:
+                cell.query = query
+            return query
+        except Exception:
+            # nothing was cached, use the temporary version instead
+            print(f"\nMaking new query")
+            tmp_query.run()
+            tmp_query.save_query()
+            return tmp_query
 
     def validate_parameters(self):
         # TODO: ensure num_spikes criterion is set if spike properties in property names 
@@ -40,35 +61,51 @@ class Query(object):
         self.mean_df = mean_df[column_names]
         return self.mean_df 
     
-    # query_id, hex_digest, save_query, and load_query not implemented yet
-    def query_id(self):
-        cell_criteria_str  = ['cell_criteria'] + list(self.cell_criteria.items())  
-        response_criteria_str = ['response_criteria'] + list(self.response_criteria.items())
-        cell_properties_str = ['cell_properties'] + self.cell_properties
-        response_properties_str = ['response_properties'] + self.response_properties
+    def query_properties(self):
+        cell_criteria = list(self.cell_criteria.items())
+        response_criteria = list(self.response_criteria.items())
+        cell_properties = self.cell_properties
+        response_properties = self.response_properties
 
         cell_names = []
         for cell in self.cells:
             cell_names.append(cell.calc_cell_name())
-        
-        all_criteria_str = cell_criteria_str + response_criteria_str
-        all_properties_str = cell_properties_str + response_properties_str
 
-        return cell_names + all_criteria_str + all_properties_str 
+        return f"""cell_names: {cell_names};
+        cell_criteria: {cell_criteria};
+        response_criteria: {response_criteria};
+        cell_properties: {cell_properties};
+        response_properties: {response_properties}
+        """
         
-    def hex_digest(self):
+    def query_id(self):
         q = hashlib.sha256()
-        q.update(bytes(str(self.query_id()), encoding="ASCII"))
+        q.update(bytes(str(self.query_properties()), encoding="ASCII"))
         return q.hexdigest()
 
-    def save_query(self, file_path= 'neurospyke/saved_queries/'):
-        with open(file_path + self.hex_digest() + '.pickle', 'wb') as f:
-            pickle.dump(self, f)
+    def query_cache_filename(self):
+        return os.path.join(query_cache_dir, f"{self.query_id()}.pickle")
 
-    def load_query(self, file_path='neurospyke/saved_queries/'):
-        with open(file_path + self.hex_digest() + '.pickle', 'rb') as f:
+    def is_cached(self):
+        return os.path.exists(self.query_cache_filename())
+
+    # instance method which saves the 'self' query
+    def save_query(self):
+        assert hasattr(self, 'mean_df'), "query must be run before it can be saved"
+        filename = self.query_cache_filename()
+        cells = self.cells
+        self.cells=None # remove cells to save filespace
+        with open(filename, 'wb') as f:
+            pickle.dump(self, f)
+        self.cells = cells # add cells back 
+   
+    # class method which returns an instance of query
+    @classmethod
+    def load_query(cls, query_cache_filepath):
+        with open(query_cache_filepath, 'rb') as f:
             query = pickle.load(f)
-        return query
+            print(f"\nLoading previously saved query")
+            return query 
 
 
     def describe(self):
