@@ -26,26 +26,23 @@ def D1_D3_scatter_plot(df, output_dir,  x_property, y_property):
     plt.savefig(output_dir + file_name)
 
 
-def create_axis_label(property_keyword):
+def create_axis_label(property_name):
     """
-    Create axis label from property_keyword, either using property_label_dict
+    Create axis label from property_name, either using property_label_dict
     or applying "humanize" from inflection module. 
     """
-    if property_keyword[-1].isdigit():
-        number = property_keyword[-1]
-        property_name = property_keyword[:-1] + "#"
-        try:
-            label_tmp = property_label_dict[property_name]
-            label = label_tmp.replace("#", number)
-        except:
-            label = humanize(property_keyword)
-    else:
-        property_name = property_keyword
-        try:
-            label = property_label_dict[property_name]
-        except:
-            label = humanize(property_name)
+
+    last_char = property_name[-1] 
+
+    if last_char.isdigit():
+        # e.g. for property_name 'thresh4' look up 'thresh#' in dict
+        property_name = property_name[:-1] + "#"
+
+    label = property_label_dict.get(property_name, humanize(property_name))
+    label = label.replace("#", last_char)
+
     return label
+
 # rgb_colors dictionary for custom color names
 rgb_colors = dict()
 rgb_colors['dodgerblue'] = (.12, .56, 1)
