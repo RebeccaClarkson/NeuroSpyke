@@ -9,12 +9,9 @@ cell_file_pattern = 'docs/example_cells/*.mat'
 output_dir = 'docs/output/'
 
 
-""" Load example cells """
+""" Load example cells and run queries """
 example_cells = load_cells(cell_file_pattern)
 
-
-
-"""Run two queries """
 # Query 1 
 response_criteria = {'curr_duration':.3, 'num_spikes': 5}
 response_properties = ['doublet_index', 'delta_thresh', 'num_spikes']

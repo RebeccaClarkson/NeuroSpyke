@@ -18,8 +18,10 @@ class Query(object):
 
     @classmethod
     def create_or_load_from_cache(cls, cells, **kwargs):
-        # make an instance of query to have access to instance methods, this
-        # will be the actual query object we use if it's not in the cache
+        """ 
+        Make an instance of a query to have access to its instance methods.
+        This will be the actual query object used if not in the cache.
+        """
         tmp_query = cls(cells, **kwargs)
         try:
             # load from cache, if all goes well, return the cached version
@@ -89,7 +91,6 @@ class Query(object):
     def is_cached(self):
         return os.path.exists(self.query_cache_filename())
 
-    # instance method which saves the 'self' query
     def save_query(self):
         assert hasattr(self, 'mean_df'), "query must be run before it can be saved"
         filename = self.query_cache_filename()
@@ -99,14 +100,12 @@ class Query(object):
             pickle.dump(self, f)
         self.cells = cells # add cells back 
    
-    # class method which returns an instance of query
     @classmethod
     def load_query(cls, query_cache_filepath):
         with open(query_cache_filepath, 'rb') as f:
             query = pickle.load(f)
             print(f"\nLoading previously saved query")
             return query 
-
 
     def describe(self):
         criteria = f"Cell: {self.cell_criteria}, Response: {self.response_criteria}"

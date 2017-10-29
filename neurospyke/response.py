@@ -62,7 +62,7 @@ class Response(object):
         """ 
         Returns a one row dataframe with data for all response_properties.
         """
-        response_properties = self.sweep.cell.query.response_properties
+        response_properties = self.sweep.cell.query.response_properties 
         results_dict = self.calc_properties(response_properties)
         return pd.DataFrame([results_dict])
 

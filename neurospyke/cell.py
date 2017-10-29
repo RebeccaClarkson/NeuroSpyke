@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from neurospyke.sweep import Sweep
 from neurospyke.response import Response
+import matplotlib.pyplot as plt
 
 class Cell(object):
 
@@ -30,10 +31,41 @@ class Cell(object):
             print(f"key: {key} value: {value}")
 
     def valid_responses(self):
+        # save references to analyzed sweeps for later plot/analysis
+        self.analyzed_sweeps = []
+
         for sweep in self.sweeps():
             for response in sweep.responses():
                 if response.meets_criteria():
+                    self.analyzed_sweeps.append(sweep)
                     yield response
+  
+    def sweep_plot_setup(self, filepath=None):
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True)
+
+        ax1.set_ylabel('mV'); 
+        ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
+        ax2.set_ylim([-400, 250])
+
+        yield fig, (ax1, ax2)
+
+        # save or plot figure
+        if filepath:
+            fig.savefig(filepath)
+        else:
+            plt.show()
+
+    def plot_sweeps(self, sweeps=None, filepath=None):
+
+        sweeps = sweeps or self.analyzed_sweeps
+        
+        for fig, (ax1, ax2) in self.sweep_plot_setup(filepath):
+            x_max = 0
+            for sweep in sweeps:
+                ax1.plot(sweep.sweep_df.time, sweep.sweep_df.data)
+                ax2.plot(sweep.sweep_df.time, sweep.sweep_df.commands)
+                x_max = max([x_max, max(sweep.sweep_df.time)])
+            ax1.set_xlim([0, x_max])
 
     def response_properties_df(self):
         df_list = [response.run() for response in self.valid_responses()]
@@ -94,6 +126,7 @@ class Cell(object):
         response.
         """
         response_df = self.response_properties_df()
+
         if response_df is not None:
             mean_series = response_df.mean()
             mean_response_df = pd.DataFrame(

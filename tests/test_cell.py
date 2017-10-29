@@ -4,6 +4,7 @@ from neurospyke.query import Query
 from neurospyke.response import Response
 import numpy as np
 import pandas as pd
+#import matplotlib.pyplot as plt
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
 response_properties = ['APmax_vals', 'doublet_index', 'delta_thresh']
@@ -45,6 +46,7 @@ def test_calc_mean_response_properties_df():
     spike_cols = [s for s in mean_df.columns if 'delta_thresh' in s]
     assert len(spike_cols) == 5
     print(f"\nThe mean properties for {ex1.calc_cell_name()} are \n{mean_df}")
+    print(f"\n The full df is {ex1.response_properties_df()}")
 
 
 def test_average_response():

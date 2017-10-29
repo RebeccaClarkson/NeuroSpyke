@@ -1,5 +1,4 @@
 from neurospyke.response import Response
-import matplotlib.pyplot as plt
 import pandas as pd
 
 class Sweep(object):
@@ -75,19 +74,10 @@ class Sweep(object):
         return [Response(curr_inj_params, self) 
                 for curr_inj_params in self.current_inj_waveforms()]
 
-    def plot(self, filepath):
-        fig, (ax1, ax2) = plt.subplots(2, sharex=True)
-        ax1.plot(self.sweep_df.time, self.sweep_df.data)
-        ax2.plot(self.sweep_df.time, self.sweep_df.commands)
-        
-        # set labels
-        ax1.set(title = f"sweep #{self.sweep_df.sweep_index[0]}")
-        ax1.set_ylabel('mV'); 
-        ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
-        
-        # set axes limits
-        ax1.set_xlim([min(self.sweep_df.time), max(self.sweep_df.time)]); 
-        ax1.set_ylim([-150, 50])
-        ax2.set_ylim([-400, 250])
-        # save figure
-        fig.savefig(filepath)
+    def plot(self, filepath=None):
+
+        for fig, (ax1, ax2) in self.cell.sweep_plot_setup(filepath):
+            ax1.plot(self.sweep_df.time, self.sweep_df.data)
+            ax2.plot(self.sweep_df.time, self.sweep_df.commands)
+            ax1.set(title = f"sweep #{self.sweep_df.sweep_index[0]}")
+            ax1.set_xlim([0, max(self.sweep_df.time)]); 
