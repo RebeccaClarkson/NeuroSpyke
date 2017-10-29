@@ -203,7 +203,7 @@ class Response(object):
             
             #TODO assert that monotonically increasing?
             thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1 
-            
+             
             thresh_idxs.append(thresh_idx)
             thresh_vals.append(self.sweep.data()[thresh_idx])
         return np.array(thresh_idxs), np.array(thresh_vals)
@@ -221,6 +221,49 @@ class Response(object):
         threshold = self.calc_or_read_from_cache('threshold_vals')
         return np.array(AP_max - threshold)
 
+    def calc_val_at_percent_APamplitude(self, percent):
+        AP_amplitudes = self.calc_or_read_from_cache('AP_amplitudes')
+        thresh_vals = self.calc_or_read_from_cache('threshold_vals')
+        amplitude_at_percent = thresh_vals + AP_amplitudes * percent/100
+        return amplitude_at_percent
+
+    def calc_dVdt_at_percent_APamplitude(self, direction='rising',  percent=20):
+        """
+        This method calculates dVdt for each AP in the response, at a given
+        percent of AP amplitude.
+        """
+        num_spikes = self.calc_or_read_from_cache('num_spikes')
+        dVdt = self.calc_or_read_from_cache('dVdt_mV_per_ms')
+        AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
+        AHP_idx = self.calc_or_read_from_cache('AHP_idxs') 
+        
+        amplitudes_at_percent = self.calc_val_at_percent_APamplitude(percent) 
+        dVdt_vals = []
+
+        for i in range(num_spikes):
+            if direction == 'rising':
+                if i == 0: 
+                    start_idx = self.onset_pnt
+                else:
+                    start_idx = AHP_idx[i-1]
+                stop_idx = AP_max_idx[i]
+
+            elif direction == 'falling':
+                start_idx = AP_max_idx[i]
+                if i < num_spikes-1:
+                    stop_idx = AHP_idx[i] 
+                else:
+                    stop_idx = self.offset_pnt
+            
+            amplitude_at_percent = amplitudes_at_percent[i] 
+            
+            values_to_search = self.sweep.data()[start_idx:stop_idx]
+            idx = np.argmin(abs(values_to_search-amplitude_at_percent))
+
+            dVdt_val = np.float(dVdt[idx])
+            dVdt_vals.append(dVdt_val)
+
+        return np.array(dVdt_vals)
 
     def calc_delta_thresh(self):
         """
@@ -327,4 +370,3 @@ class Response(object):
             (reb_calc_data.iloc[0]+reb_calc_data.iloc[-1])/2 ), va='center')
         plt.title(self.sweep.cell.calc_cell_name())
         plt.savefig(filepath)
-        

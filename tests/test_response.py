@@ -30,6 +30,20 @@ response_obj_5AP = Response(ex_5AP_sweep_obj.current_inj_waveforms()[0], ex_5AP_
 
 #ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
 
+def test_calc_val_at_percent_APamplitude():
+    calc_vals = response_obj_5AP.calc_val_at_percent_APamplitude(percent=20)
+    known_vals = np.array([-25.1947, -24.1427, -24.5680, -24.9613, -24.7053])
+    assert np.allclose(calc_vals, known_vals)
+
+def test_calc_dVdt_rising_at_percent_APamplitude():
+    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamplitude(percent=20, direction='rising')
+    known_vals = [263.6667,265.6000,291.0000,228.5333,243.1333] 
+    assert np.allclose(calc_vals, known_vals)
+    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamplitude(percent=20, direction='falling')
+    known_vals = [-54.6667,-28.3333,-33.2000,-38.0667,-38.0667]
+    assert np.allclose(calc_vals, known_vals)
+    assert False, "done for now" 
+
 def test_calc_delta_thresh():
     calc_vals = response_obj_5AP.calc_delta_thresh()
     print(calc_vals)
