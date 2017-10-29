@@ -1,8 +1,8 @@
-import glob 
 from neurospyke.cell import Cell
+import glob 
+import os
 import pandas as pd
 import pickle 
-import os
 
 cache_dir = 'cached_data/'
 cell_cache_dir = cache_dir + 'cells/'
@@ -43,6 +43,3 @@ def concat_dfs_by_index(df1, df2):
 def reorder_df(df, first_columns):
     reordered = first_columns + [c for c in df.columns if c not in first_columns]
     return df[reordered]
-
-rgb_colors = dict()
-rgb_colors['dodgerblue'] = (.12, .56, 1)
