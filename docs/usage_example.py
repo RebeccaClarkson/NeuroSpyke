@@ -14,7 +14,7 @@ example_cells = load_cells(cell_file_pattern)
 
 # Query 1 
 response_criteria = {'curr_duration':.3, 'num_spikes': 5}
-response_properties = ['doublet_index', 'delta_thresh', 'num_spikes']
+response_properties = ['doublet_index', 'delta_thresh', 'num_spikes', 'dVdt_at_percent_APamplitude__20__rising']
 query1 = Query.create_or_load_from_cache(example_cells, response_criteria=response_criteria, 
         response_properties=response_properties)
 df1 = query1.mean_df[['doublet_index', 'num_spikes', 'delta_thresh4']]

@@ -18,12 +18,16 @@ class Response(object):
     def time(self):
         return self.sweep.sweep_df['time']
 
-    def calc_or_read_from_cache(self, attr_name):
+    def calc_or_read_from_cache(self, attr_name_with_args):
+        attr_pieces = attr_name_with_args.split('__') 
+        attr_name = attr_pieces[0]
+        args = attr_pieces[1:]
+
         if not attr_name in self._cache:
             fn = getattr(self, f"calc_{attr_name}")
-            value = fn()
-            self._cache[attr_name] = value
-        return self._cache[attr_name]
+            value = fn(*args)
+            self._cache[attr_name_with_args] = value
+        return self._cache[attr_name_with_args]
 
     def debug_cache(self):
         print(f"Cache has {len(self._cache)} items.")
@@ -33,12 +37,20 @@ class Response(object):
     def meets_criterion(self, criterion):
         attr_name, condition = criterion
         value = self.calc_or_read_from_cache(attr_name)
+
         if isinstance(condition, str):
-            # process condition of string
-            # TODO implement
-            raise Exception("TODO")
+            condition_val_str = ''.join([s for s in condition if s.isdigit()])
+            condition_val = float(condition_val_str) 
+
+            if "<" in condition and ">" in condition:
+                raise Exception("TODO")   
+
+            if "<" in condition:
+                return value < condition_val
+
+            if ">" in condition:
+                return value > condition_val
         else:
-            # use simple equality
             return np.isclose(value, condition)
 
     def meets_criteria(self):
@@ -65,6 +77,9 @@ class Response(object):
         response_properties = self.sweep.cell.query.response_properties 
         results_dict = self.calc_properties(response_properties)
         return pd.DataFrame([results_dict])
+
+    def calc_sweep_time(self):
+        return self.sweep.sweep_df.sweep_time[0]
 
     def calc_curr_duration(self):
         return self.offset_time - self.onset_time
@@ -221,23 +236,24 @@ class Response(object):
         threshold = self.calc_or_read_from_cache('threshold_vals')
         return np.array(AP_max - threshold)
 
-    def calc_val_at_percent_APamplitude(self, percent):
+    def calc_val_at_percent_APamp(self, percent):
         AP_amplitudes = self.calc_or_read_from_cache('AP_amplitudes')
-        thresh_vals = self.calc_or_read_from_cache('threshold_vals')
+        thresh_vals = self.calc_or_read_from_cache('threshold_vals') 
         amplitude_at_percent = thresh_vals + AP_amplitudes * percent/100
         return amplitude_at_percent
-
-    def calc_dVdt_at_percent_APamplitude(self, direction='rising',  percent=20):
+    
+    def calc_dVdt_at_percent_APamp(self, percent,  direction):
         """
         This method calculates dVdt for each AP in the response, at a given
         percent of AP amplitude.
         """
+        percent = int(percent)
         num_spikes = self.calc_or_read_from_cache('num_spikes')
         dVdt = self.calc_or_read_from_cache('dVdt_mV_per_ms')
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
         AHP_idx = self.calc_or_read_from_cache('AHP_idxs') 
         
-        amplitudes_at_percent = self.calc_val_at_percent_APamplitude(percent) 
+        amplitudes_at_percent = self.calc_val_at_percent_APamp(percent) 
         dVdt_vals = []
 
         for i in range(num_spikes):

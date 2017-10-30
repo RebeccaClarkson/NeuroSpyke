@@ -5,8 +5,8 @@ from neurospyke.utils import load_cells
 import pandas as pd
 import numpy as np
 
-response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-response_properties = ['APmax_vals', 'doublet_index']
+response_criteria = {'curr_duration': .3, 'num_spikes': 5, 'sweep_time': '<150'}
+response_properties = ['dVdt_at_percent_APamp__20__rising']
 data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 query1 = Query(cells, response_criteria=response_criteria, 
@@ -17,7 +17,6 @@ cell1 = query1.cells[0]
 cell2 = query1.cells[1]
 
 ex_5APsweep_df = cell1.sweep_df(16)
-
 ex_2inj_sweep_df = cell2.sweep_df(0)
 
 image_save_filepath = "tests/data/images/"
@@ -27,22 +26,20 @@ ex_5AP_sweep_obj = Sweep(ex_5APsweep_df, cell=cell1) # cell_name = 010417-1, swe
 ex_2inj_sweep_obj = Sweep(ex_2inj_sweep_df, cell=cell2) # cell_name = 041015A, sweep_idx = 0 (sweep 1)
 response_obj1 = Response(ex_2inj_sweep_obj.current_inj_waveforms()[0], ex_2inj_sweep_obj)
 response_obj_5AP = Response(ex_5AP_sweep_obj.current_inj_waveforms()[0], ex_5AP_sweep_obj)
-
 #ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
 
 def test_calc_val_at_percent_APamplitude():
-    calc_vals = response_obj_5AP.calc_val_at_percent_APamplitude(percent=20)
+    calc_vals = response_obj_5AP.calc_val_at_percent_APamp(percent=20)
     known_vals = np.array([-25.1947, -24.1427, -24.5680, -24.9613, -24.7053])
     assert np.allclose(calc_vals, known_vals)
 
 def test_calc_dVdt_rising_at_percent_APamplitude():
-    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamplitude(percent=20, direction='rising')
+    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamp(percent=20, direction='rising')
     known_vals = [263.6667,265.6000,291.0000,228.5333,243.1333] 
     assert np.allclose(calc_vals, known_vals)
-    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamplitude(percent=20, direction='falling')
+    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamp(percent=20, direction='falling')
     known_vals = [-54.6667,-28.3333,-33.2000,-38.0667,-38.0667]
     assert np.allclose(calc_vals, known_vals)
-    assert False, "done for now" 
 
 def test_calc_delta_thresh():
     calc_vals = response_obj_5AP.calc_delta_thresh()
