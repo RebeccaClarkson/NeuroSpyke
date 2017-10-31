@@ -1,4 +1,5 @@
 from neurospyke.plot_df_utils import D1_D3_scatter_subplots
+from neurospyke.plot_df_utils import D1_D3_scatter_plot
 from neurospyke.query import Query
 from neurospyke.utils import concat_dfs_by_index 
 from neurospyke.utils import load_cells 
@@ -20,7 +21,7 @@ query1 = Query.create_or_load_from_cache(example_cells, response_criteria=respon
 df1 = query1.mean_df[['doublet_index', 'num_spikes', 'delta_thresh4', 'dVdt_at_percent_APamp__20__rising4']]
 
 # Plot example 5 AP sweep
-#TODO 
+#query1.cells[0].plot_sweeps(filepath=output_dir + 'Example 5 AP sweeps')
 
 # Query 2
 response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
@@ -48,6 +49,9 @@ with open(output_dir + 'example_cells_df.txt', 'w') as outputfile:
 
 
 """ Plot data from example cells """
+D1_D3_scatter_plot(example_cells_df, 'doublet_index', 'reb_delta_t', output_dir = output_dir)
+D1_D3_scatter_plot(example_cells_df, 'doublet_index', 'delta_thresh4', output_dir = output_dir)
+
 comparisons = [
         ('sag_fit_amplitude', 'reb_delta_t'), 
         ('doublet_index', 'delta_thresh4'),
