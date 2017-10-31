@@ -226,9 +226,14 @@ class Cell(object):
         for i in self.sweep_index_iter():
             yield self.sweep(i)
 
+    def calc_sag_onset_time(self):
+        return self.average_response().calc_sag_onset_time()
 
-    def calc_sag_amplitude(self):
-        return self.average_response().calc_sag_amplitude()
+    def calc_sag_abs_amplitude(self):
+        return self.average_response().calc_sag_abs_amplitude()
+
+    def calc_sag_fit_amplitude(self):
+        return self.average_response().calc_sag_fit_amplitude()
 
     def calc_reb_delta_t(self):
         return self.average_response().calc_reb_delta_t()

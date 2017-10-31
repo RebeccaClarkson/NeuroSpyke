@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 class Response(object):
     def __init__(self, curr_inj_params, sweep, response_properties=None, response_critiera=None):
@@ -41,15 +42,14 @@ class Response(object):
         if isinstance(condition, str):
             condition_val_str = ''.join([s for s in condition if s.isdigit()])
             condition_val = float(condition_val_str) 
-
             if "<" in condition and ">" in condition:
                 raise Exception("TODO")   
-
-            if "<" in condition:
+            elif "<" in condition:
                 return value < condition_val
-
-            if ">" in condition:
+            elif ">" in condition:
                 return value > condition_val
+            else:
+                raise Exception(f"{condition} is invalid condition")
         else:
             return np.isclose(value, condition)
 
@@ -91,7 +91,7 @@ class Response(object):
         """Calculate data acquisition sampling rate, in points per ms"""
         delta_t_sec = self.sweep.time()[1]- self.sweep.time()[0]
         points_per_ms = 1/(delta_t_sec * 1000) 
-        return int(points_per_ms)
+        return int(round(points_per_ms))
 
     def calc_ms_per_point(self):
         points_per_ms = 1/self.calc_or_read_from_cache('points_per_ms')
@@ -298,21 +298,88 @@ class Response(object):
     def calc_doublet_index(self):
         return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
 
-    def calc_sag_amplitude(self):
-        # TODO 
-        pass 
+    def calc_peak_sag_idx_and_val(self):
+        peak_sag_idx = np.argmin(self.sweep.data()[self.onset_pnt:self.offset_pnt])
+        peak_sag_val = self.sweep.data()[peak_sag_idx]
+        return peak_sag_idx, peak_sag_val
+
+    def calc_peak_sag_idx(self):
+        idx, _ = self.calc_or_read_from_cache('peak_sag_idx_and_val')
+        return idx
+
+    def calc_peak_sag_val(self):
+        _, val = self.calc_or_read_from_cache('peak_sag_idx_and_val')
+        return val
+
+    def calc_sag_onset_time(self):
+        peak_sag_idx = self.calc_or_read_from_cache('peak_sag_idx')
+        current_onset_idx = self.onset_pnt # -2 to match matlab 
+        return (peak_sag_idx-current_onset_idx)*self.calc_or_read_from_cache('ms_per_point')
+
+    def calc_sag_abs_amplitude(self):
+        """
+        Calculates absolute sag amplitude (mV change from peak to steady state)
+        """
+        peak_sag_amp  = self.calc_or_read_from_cache('peak_sag_val')
+        steady_state_amp = self.calc_or_read_from_cache('sag_steady_state_avg_amp')
+        return peak_sag_amp - steady_state_amp  
+
+
+    def calc_sag_offset_idx(self):
+        """
+        Returns point of sag offset, which is 1 point before end of current injection to avoid transient.
+        """
+        return self.offset_pnt-1
 
     def calc_sag_steady_state_avg_amp(self):
         """
-        Returns the mean value of sag steady state, defined as 10ms before
-        current offset for -400 pA injections.
+        Returns the mean value of sag steady state, defined as ~10ms before
+        current offset to current_offset for -400 pA injections.
         """
         points_per_ms = self.calc_or_read_from_cache('points_per_ms')
-        steady_state_offset_pnt = self.offset_pnt
-        steady_state_onset_pnt = steady_state_offset_pnt - 10 * points_per_ms
-        steady_state_vals = self.data()[steady_state_onset_pnt:steady_state_offset_pnt]
+        steady_state_offset_idx = self.calc_or_read_from_cache('sag_offset_idx')
+        steady_state_onset_idx = steady_state_offset_idx - 10*points_per_ms # -1 to match matlab analysis
+        steady_state_vals = self.data()[steady_state_onset_idx:steady_state_offset_idx]
         return np.mean(steady_state_vals)
-        
+       
+    def calc_sag_fit_amplitude(self):
+        """
+        Calculates sag amplitude based on an exponential fit from peak sag to sag offset. 
+        """
+        assert self.calc_or_read_from_cache('sag_onset_time') < 80, "Fitting to no sag"
+
+        def exponential(x, a, b):
+            return a * np.exp(b*x) 
+
+        def goodness_of_fit(y, y_fit):
+            ss_res = np.sum((y - y_fit) ** 2)
+            ss_tot = np.sum((y - np.mean(y)) ** 2)
+            r2 = 1 - (ss_res / ss_tot)
+            return r2
+
+        start_idx = self.calc_or_read_from_cache('peak_sag_idx')
+        end_idx = self.calc_or_read_from_cache('sag_offset_idx')
+        x = self.time()[start_idx:end_idx] - self.time()[start_idx]
+        y = self.data()[start_idx:end_idx]
+
+        y_start0 = y-np.min(y)
+        y_end0 = y-np.max(y)
+        popt_vals = []; r2_vals = []; y_fit_vals = []
+        for y in y_start0, y_end0:
+            popt, _ = curve_fit(exponential, x, y)
+            y_fit = exponential(x, *popt)
+            r2 = goodness_of_fit(y, y_fit)
+           
+            popt_vals.append(popt)
+            r2_vals.append(r2)
+            y_fit_vals.append(y_fit)
+     
+        best_fit_idx = np.argmax(r2_vals)
+        sag_amplitude = popt_vals[best_fit_idx][0]
+
+        return sag_amplitude 
+
+
     def calc_max_rebound_amp(self):
         """
         Returns the max rebound amplitude after current offset within the response window.
@@ -320,10 +387,10 @@ class Response(object):
         reb_data = self.data()[self.offset_pnt:]
         return max(reb_data)
 
-    def find_nearest_pnt_df(self, df, value):
-        array = np.array(df)
+    def find_nearest_pnt_series(self, pd_series, value):
+        array = np.array(pd_series)
         idx_array = (np.abs(array-value)).argmin()
-        return df.index[0] + idx_array
+        return pd_series.index[0] + idx_array
         
     def calc_reb_delta_t(self):
         """
@@ -338,9 +405,9 @@ class Response(object):
         eighty_percent_rebound_voltage = steady_state_avg_amp + rebound_amp_change * 0.80
 
         reb_data = self.data()[self.offset_pnt:]
-        closest_pnt20 = self.find_nearest_pnt_df(reb_data, 
+        closest_pnt20 = self.find_nearest_pnt_series(reb_data, 
                 twenty_percent_rebound_voltage)
-        closest_pnt80 = self.find_nearest_pnt_df(reb_data, 
+        closest_pnt80 = self.find_nearest_pnt_series(reb_data, 
                 eighty_percent_rebound_voltage)
 
         self._cache['closest_pnt20'] = closest_pnt20
