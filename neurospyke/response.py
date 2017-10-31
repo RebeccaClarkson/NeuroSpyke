@@ -324,7 +324,6 @@ class Response(object):
         steady_state_amp = self.calc_or_read_from_cache('sag_steady_state_avg_amp')
         return peak_sag_amp - steady_state_amp  
 
-
     def calc_sag_offset_idx(self):
         """
         Returns point of sag offset, which is 1 point before end of current injection to avoid transient.
@@ -338,7 +337,7 @@ class Response(object):
         """
         points_per_ms = self.calc_or_read_from_cache('points_per_ms')
         steady_state_offset_idx = self.calc_or_read_from_cache('sag_offset_idx')
-        steady_state_onset_idx = steady_state_offset_idx - 10*points_per_ms # -1 to match matlab analysis
+        steady_state_onset_idx = steady_state_offset_idx - 10 * points_per_ms # -1 to match matlab analysis
         steady_state_vals = self.data()[steady_state_onset_idx:steady_state_offset_idx]
         return np.mean(steady_state_vals)
        
@@ -359,6 +358,7 @@ class Response(object):
 
         start_idx = self.calc_or_read_from_cache('peak_sag_idx')
         end_idx = self.calc_or_read_from_cache('sag_offset_idx')
+
         x = self.time()[start_idx:end_idx] - self.time()[start_idx]
         y = self.data()[start_idx:end_idx]
 
@@ -378,7 +378,6 @@ class Response(object):
         sag_amplitude = popt_vals[best_fit_idx][0]
 
         return sag_amplitude 
-
 
     def calc_max_rebound_amp(self):
         """
@@ -416,16 +415,22 @@ class Response(object):
         reb_delta_t = (closest_pnt80-closest_pnt20)/self.calc_or_read_from_cache('points_per_ms')
         return reb_delta_t 
 
-    def plot_response(self, filepath):
+    def plot_response(self, filepath=None):
         plt.figure()
         x1 = self.time(); y1 = self.data()
         plt.plot(x1, y1, color='k')
         plt.xlabel('time (s)')
         plt.ylabel('mV')
-        plt.savefig(filepath)
+
+        if filepath:
+            plt.savefig(filepath)
 
     def plot_reb_delta_t(self, filepath):
-        self.plot_response(filepath)
+        """
+        Adds annotations for reb_delta_t analysis to a figure object created
+        with self.plot_respons()
+        """
+        self.plot_response() 
         self.calc_or_read_from_cache('reb_delta_t')
         # These two values should be in cache when 'reb_delta_t' is in cache.
         closest_pnt20 = self._cache['closest_pnt20']
