@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 class Response(object):
-    def __init__(self, curr_inj_params, sweep, response_properties=None, response_critiera=None):
+    def __init__(self, curr_inj_params, sweep):
         self.onset_pnt = int(curr_inj_params['onset_pnt'])
         self.offset_pnt = int(curr_inj_params['offset_pnt'])
         self.onset_time = curr_inj_params['onset_time']
@@ -12,6 +12,14 @@ class Response(object):
         self.amplitude = curr_inj_params['amplitude']
         self.sweep = sweep
         self._cache = {}
+        
+
+    def criteria_priority(self):
+        first_criteria = ['sweep_time']
+        response_criteria_names = set(self.sweep.cell.query.response_criteria.keys())
+        response_criteria_names = response_criteria_names.difference(first_criteria)
+        return first_criteria + sorted(response_criteria_names)
+
 
     def data(self):
         return self.sweep.sweep_df['data']
@@ -54,10 +62,16 @@ class Response(object):
             return np.isclose(value, condition)
 
     def meets_criteria(self):
-        criteria = self.sweep.cell.query.response_criteria
+        criteria_dict = self.sweep.cell.query.response_criteria
+        criteria_priority = self.criteria_priority()
+
+        criteria_list = []
+        for criteria in criteria_priority:
+            if criteria in criteria_dict.keys():
+                criteria_list.append((criteria, criteria_dict[criteria]))
 
         return all(self.meets_criterion(criterion)
-                for criterion in criteria.items())
+                for criterion in criteria_list)
 
     def calc_properties(self, property_names):
         property_dict = {}
@@ -135,7 +149,7 @@ class Response(object):
         else:
             # if there are spikes outside of current injection, don't analyze
             return []
-
+     
     def calc_num_spikes(self):
         spike_points = self.calc_or_read_from_cache('spike_points')
         return len(spike_points)
@@ -236,13 +250,13 @@ class Response(object):
         threshold = self.calc_or_read_from_cache('threshold_vals')
         return np.array(AP_max - threshold)
 
-    def calc_val_at_percent_APamp(self, percent):
+    def calc_val_pct_APamp(self, percent):
         AP_amplitudes = self.calc_or_read_from_cache('AP_amplitudes')
         thresh_vals = self.calc_or_read_from_cache('threshold_vals') 
         amplitude_at_percent = thresh_vals + AP_amplitudes * percent/100
         return amplitude_at_percent
     
-    def calc_dVdt_at_percent_APamp(self, percent,  direction):
+    def calc_dVdt_pct_APamp(self, percent,  direction):
         """
         This method calculates dVdt for each AP in the response, at a given
         percent of AP amplitude.
@@ -253,7 +267,7 @@ class Response(object):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
         AHP_idx = self.calc_or_read_from_cache('AHP_idxs') 
         
-        amplitudes_at_percent = self.calc_val_at_percent_APamp(percent) 
+        amplitudes_at_percent = self.calc_val_pct_APamp(percent) 
         dVdt_vals = []
 
         for i in range(num_spikes):
@@ -346,7 +360,6 @@ class Response(object):
         Calculates sag amplitude based on an exponential fit from peak sag to sag offset. 
         """
         assert self.calc_or_read_from_cache('sag_onset_time') < 80, "Fitting to no sag"
-
         def exponential(x, a, b):
             return a * np.exp(b*x) 
 

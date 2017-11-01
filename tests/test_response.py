@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5, 'sweep_time': '<150'}
-response_properties = ['dVdt_at_percent_APamp__20__rising']
+response_properties = ['dVdt_pct_APamp__20__rising']
 data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 query1 = Query(cells, response_criteria=response_criteria, 
@@ -28,16 +28,22 @@ response_obj1 = Response(ex_2inj_sweep_obj.current_inj_waveforms()[0], ex_2inj_s
 response_obj_5AP = Response(ex_5AP_sweep_obj.current_inj_waveforms()[0], ex_5AP_sweep_obj)
 #ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
 
-def test_calc_val_at_percent_APamplitude():
-    calc_vals = response_obj_5AP.calc_val_at_percent_APamp(percent=20)
+def test_criteria_priority():
+    criteria = response_obj_5AP.criteria_priority()
+    assert criteria[0] == 'sweep_time'
+
+
+
+def test_calc_val_pct_APamplitude():
+    calc_vals = response_obj_5AP.calc_val_pct_APamp(percent=20)
     known_vals = np.array([-25.1947, -24.1427, -24.5680, -24.9613, -24.7053])
     assert np.allclose(calc_vals, known_vals)
 
-def test_calc_dVdt_rising_at_percent_APamplitude():
-    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamp(percent=20, direction='rising')
+def test_calc_dVdt_rising_pct_APamplitude():
+    calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent=20, direction='rising')
     known_vals = [263.6667,265.6000,291.0000,228.5333,243.1333] 
     assert np.allclose(calc_vals, known_vals)
-    calc_vals = response_obj_5AP.calc_dVdt_at_percent_APamp(percent=20, direction='falling')
+    calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent=20, direction='falling')
     known_vals = [-54.6667,-28.3333,-33.2000,-38.0667,-38.0667]
     assert np.allclose(calc_vals, known_vals)
 

@@ -15,7 +15,7 @@ def D1_D3_scatter_subplots(df, xy_pairs, output_path):
         if i == 1:
             plt.legend()
         i += 1
-    plt.suptitle('D1 vs D3 ephys')
+    plt.suptitle('D1R- vs D3R-expressing pyramidal neuron electrophysiology')
     plt.savefig(output_path)
 
 

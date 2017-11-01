@@ -3,6 +3,7 @@ import hashlib
 import pickle
 import os
 from neurospyke.utils import query_cache_dir
+from neurospyke.sweep import Sweep
 
 class Query(object):
     def __init__(self, cells, response_criteria=None, response_properties=None, 
@@ -17,25 +18,28 @@ class Query(object):
         self.validate_parameters()   
 
     @classmethod
-    def create_or_load_from_cache(cls, cells, **kwargs):
+    def create_or_load_from_cache(cls, cells, overwrite=False,  **kwargs):
         """ 
         Make an instance of a query to have access to its instance methods.
         This will be the actual query object used if not in the cache.
         """
         tmp_query = cls(cells, **kwargs)
-        try:
-            # load from cache, if all goes well, return the cached version
-            query = cls.load_query(tmp_query.query_cache_filename())
-            query.cells = cells
-            for cell in query.cells:
-                cell.query = query
-            return query
-        except Exception:
-            # nothing was cached, use the temporary version instead
-            print(f"\nMaking new query")
+        path_exists =  os.path.isfile(tmp_query.query_cache_filename())
+        if overwrite or not path_exists:
+            #print(f"\nMaking new query")
             tmp_query.run()
             tmp_query.save_query()
             return tmp_query
+        else: 
+            print(f"\nLoading query from cache")
+            query = cls.load_query(tmp_query.query_cache_filename())
+            query.cells = cells
+
+            for cell in query.cells:
+                cell.query = query
+                cell.analyzed_sweep_ids = query.analyzed_sweeps_dict[cell.calc_cell_name()]
+
+            return query
 
     def validate_parameters(self):
         # TODO: ensure num_spikes criterion is set if spike properties in property names 
@@ -54,13 +58,15 @@ class Query(object):
         df_list = []
         for cell in self.cells: 
             cell.query = self
-            #print(f"Cell name is: {cell.calc_cell_name()}")
             cell_df = cell.run()
             df_list.append(cell_df)
             if len(cell_df.columns) > len(column_names):
                 column_names = cell_df.columns
         mean_df = pd.concat(df_list)
+
+        # added to query so that can be accessed with re-loaded query
         self.mean_df = mean_df[column_names]
+        self.analyzed_sweeps_dict = self.create_analyzed_sweeps_dict()
         return self.mean_df 
     
     def query_properties(self):
@@ -80,6 +86,16 @@ class Query(object):
         response_properties: {response_properties}
         """
         
+    def create_analyzed_sweeps_dict(self):
+        """
+        Stores in the query  all analyzed sweep_ids for each cell in the query, so can work with
+        these sweeps in a re-loaded query.
+        """
+        cell_names = [cell.calc_cell_name() for cell in self.cells]
+        analyzed_sweep_ids = [cell.analyzed_sweep_ids for cell in self.cells]
+        analyzed_sweeps_dict = dict(zip(cell_names, analyzed_sweep_ids))
+        return analyzed_sweeps_dict
+
     def query_id(self):
         q = hashlib.sha256()
         q.update(bytes(str(self.query_properties()), encoding="ASCII"))
@@ -93,18 +109,22 @@ class Query(object):
 
     def save_query(self):
         assert hasattr(self, 'mean_df'), "query must be run before it can be saved"
+
         filename = self.query_cache_filename()
+
         cells = self.cells
+        self.analyzed_sweeps_dict = self.create_analyzed_sweeps_dict()
         self.cells=None # remove cells to save filespace
+
         with open(filename, 'wb') as f:
             pickle.dump(self, f)
+
         self.cells = cells # add cells back 
    
     @classmethod
     def load_query(cls, query_cache_filepath):
         with open(query_cache_filepath, 'rb') as f:
             query = pickle.load(f)
-            print(f"\nLoading previously saved query")
             return query 
 
     def describe(self):

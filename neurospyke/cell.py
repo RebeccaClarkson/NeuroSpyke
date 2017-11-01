@@ -31,15 +31,20 @@ class Cell(object):
             print(f"key: {key} value: {value}")
 
     def valid_responses(self):
-        # save references to analyzed sweeps for later plot/analysis
-        self.analyzed_sweeps = []
-
+        self.analyzed_sweep_ids = []
         for sweep in self.sweeps():
             for response in sweep.responses():
                 if response.meets_criteria():
-                    self.analyzed_sweeps.append(sweep)
+                    # save references to analyzed sweeps for later plot/analysis
+                    self.analyzed_sweep_ids.append(sweep.sweep_index())
                     yield response
-  
+ 
+    def analyzed_sweeps(self):
+        analyzed_sweeps = []
+        for sweep_id in self.analyzed_sweep_ids:
+            analyzed_sweeps.append(Sweep(self.sweep_df(sweep_id), self))
+        return analyzed_sweeps
+
     def sweep_plot_setup(self, filepath=None):
         fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
@@ -57,7 +62,7 @@ class Cell(object):
 
     def plot_sweeps(self, sweeps=None, filepath=None):
 
-        sweeps = sweeps or self.analyzed_sweeps
+        sweeps = sweeps or self.analyzed_sweeps()
         
         for fig, (ax1, ax2) in self.sweep_plot_setup(filepath):
             x_max = 0
