@@ -66,4 +66,4 @@ comparisons = [
         ('doublet_index', 'dVdt_pct_APamp__20__rising4'),
         ('delta_thresh4', 'dVdt_pct_APamp__20__rising4'), 
         ]
-D1_D3_scatter_subplots(example_cells_df, comparisons, output_path=output_dir + 'D1 vs D3 ephys.png')
+D1_D3_scatter_subplots(example_cells_df, comparisons, output_path=output_dir + 'D1_vs_D3_ephys.png')
