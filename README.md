@@ -24,7 +24,9 @@ Next, load cellular data that has been saved as .mat files.
 
 Query 1 examines an action potential spiking property, for sweeps that have .3 second current injection eliciting  5 spikes. For each  response that fits this criteria (as determined by use of "response_properties"), this query assesses three different spiking properties, with the returned dataframe having the average of these calculations: 
 
-1. the doublet index (ratio of 2nd and 1st inter-spike intervals). 
+1. 'doublet_index': ratio of 2nd and 1st inter-spike intervals
+2. 'delta_thresh': change in threshold over the course of the AP train
+3. 'dVdt_pct_APamp__20__rising': dVdt of the AP rising phase at 20% of AP amplitude
 
 ```python
 # Query 1 
@@ -86,17 +88,16 @@ query2.cells[0].plot_reb_delta_t(output_dir + 'example_reb_delta_t.png')
 
 ### Plot the results of these queries
 ```python
-""" Plot data from example cells """
 comparisons = [
         ('sag_fit_amplitude', 'reb_delta_t'), 
         ('doublet_index', 'delta_thresh4'),
         ('doublet_index', 'dVdt_pct_APamp__20__rising4'),
         ('delta_thresh4', 'dVdt_pct_APamp__20__rising4'), 
         ]
-D1_D3_scatter_subplots(example_cells_df, comparisons, output_path=output_dir + 'D1 vs D3 ephys.png')
+D1_D3_scatter_subplots(example_cells_df, comparisons, output_path=output_dir + 'D1_vs_D3_ephys.png')
 ```
 
-![Example plot:](docs/output/D1 vs D3 ephys.png "Example plot of data from queries")
+![Example plot:](docs/output/D1_vs_D3_ephys.png "Example plot of data from queries")
 
 
 Copyright 2017, Rebecca L. Clarkson. All rights reserved.
