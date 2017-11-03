@@ -2,15 +2,30 @@ from neurospyke.query import Query
 from neurospyke.cell import Cell
 from neurospyke.utils import load_cells
 import pandas as pd
+import numpy as np
 
 response_criteria = {'curr_duration': .3, 'num_spikes': 5}
-response_properties = ['num_spikes', 'APmax_vals', 'doublet_index']
+response_properties = ['num_spikes', 'APmax_vals', 'doublet_index', 
+                        'dVdt_pct_APamp_last_spike__20__rising__5', 'dVdt_pct_APamp__20__rising',
+                        'delta_thresh', 'delta_thresh_last_spike__5']
 
 data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 
 ex_query1 = Query(cells, response_criteria=response_criteria, 
         response_properties=response_properties)
+
+def test_run():
+    df1 = ex_query1.run()
+    print(f"\nResult of test_run: \n {df1}") 
+
+def test_last_spike_query():
+    df1 = ex_query1.run()
+    assert np.allclose(df1['dVdt_pct_APamp__20__rising4'], 
+            df1['dVdt_pct_APamp_last_spike__20__rising__5'])
+    assert np.allclose(df1['delta_thresh4'], 
+            df1['delta_thresh_last_spike__5'])
+    
 
 def test_query_properties():
     print(ex_query1.query_properties())
@@ -42,9 +57,6 @@ def test_create_or_load_from_cache():
     print(f"\n new_query2: \n {new_query2.mean_df}")
     
 
-def test_run():
-    df1 = ex_query1.run()
-    print(f"\nResult of test_run: \n {df1}")
 
 def test_query_with_descriptive_cell_properties():
     new_query = Query(cells)

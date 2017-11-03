@@ -301,6 +301,12 @@ class Response(object):
 
         return np.array(dVdt_vals)
 
+    def calc_dVdt_pct_APamp_last_spike(self, percent, direction,  num_spikes):
+        num_spikes = int(num_spikes)
+
+        if self.calc_or_read_from_cache('num_spikes') == num_spikes:
+            return self.calc_or_read_from_cache(f'dVdt_pct_APamp__{percent}__{direction}')[num_spikes-1]
+
     def calc_delta_thresh(self):
         """
         This method returns the change in threshold for each AP compared to the
@@ -308,6 +314,12 @@ class Response(object):
         """
         threshold_vals = self.calc_threshold_vals()
         return np.array(threshold_vals - threshold_vals[0])
+
+    def calc_delta_thresh_last_spike(self, num_spikes):
+        num_spikes = int(num_spikes)
+        if self.calc_or_read_from_cache('num_spikes') == num_spikes:
+            return self.calc_or_read_from_cache('delta_thresh')[num_spikes-1]
+
 
     def calc_ISIs(self):
         idxs = self.calc_or_read_from_cache('APmax_idxs')

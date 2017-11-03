@@ -28,11 +28,10 @@ response_obj1 = Response(ex_2inj_sweep_obj.current_inj_waveforms()[0], ex_2inj_s
 response_obj_5AP = Response(ex_5AP_sweep_obj.current_inj_waveforms()[0], ex_5AP_sweep_obj)
 #ex_5AP_sweep_obj.plot(image_save_filepath + '5APs')
 
+
 def test_criteria_priority():
     criteria = response_obj_5AP.criteria_priority()
     assert criteria[0] == 'sweep_time'
-
-
 
 def test_calc_val_pct_APamplitude():
     calc_vals = response_obj_5AP.calc_val_pct_APamp(percent=20)
@@ -47,11 +46,23 @@ def test_calc_dVdt_rising_pct_APamplitude():
     known_vals = [-54.6667,-28.3333,-33.2000,-38.0667,-38.0667]
     assert np.allclose(calc_vals, known_vals)
 
+def test_calc_dVdt_pct_APamp_last_spike():
+    calc_val = response_obj_5AP.calc_dVdt_pct_APamp_last_spike(
+            percent=20, direction='rising', num_spikes=5)
+    known_val = 243.1333
+    assert np.allclose(calc_val, known_val, atol=1e-4)
+
 def test_calc_delta_thresh():
     calc_vals = response_obj_5AP.calc_delta_thresh()
     print(calc_vals)
     known_vals = np.array([0, 2.3400, 1.1733, 0.7800, 1.1733])
     assert np.allclose(calc_vals, known_vals, atol=1e-4)
+
+def test_calc_delta_thresh_last_spike():
+    calc_val = response_obj_5AP.calc_delta_thresh_last_spike(5)
+    known_val = 1.1733
+    assert np.isclose(calc_val, known_val, atol=1e-4)
+
 
 def test_calc_threshold_and_vals():
     calc_idxs, calc_vals = response_obj_5AP.calc_threshold_idx_and_vals()
