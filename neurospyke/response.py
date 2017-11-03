@@ -92,25 +92,6 @@ class Response(object):
         results_dict = self.calc_properties(response_properties)
         return pd.DataFrame([results_dict])
 
-    def calc_sweep_time(self):
-        return self.sweep.sweep_df.sweep_time[0]
-
-    def calc_curr_duration(self):
-        return self.offset_time - self.onset_time
-
-    def calc_curr_amplitude(self):
-        return self.amplitude
-
-    def calc_points_per_ms(self):
-        """Calculate data acquisition sampling rate, in points per ms"""
-        delta_t_sec = self.sweep.time()[1]- self.sweep.time()[0]
-        points_per_ms = 1/(delta_t_sec * 1000) 
-        return int(round(points_per_ms))
-
-    def calc_ms_per_point(self):
-        points_per_ms = 1/self.calc_or_read_from_cache('points_per_ms')
-        return points_per_ms
-
     def window(self, left_window=50, right_window=50):
         """
         Returns a dataframe of the sweep_df format with only the specified
@@ -133,6 +114,31 @@ class Response(object):
         window_df['time'] = window_df['time'] - window_df['time'][0] 
         
         return window_df
+
+
+    """ BASIC PROPERTIES """
+
+    def calc_sweep_time(self):
+        return self.sweep.sweep_df.sweep_time[0]
+
+    def calc_curr_duration(self):
+        return self.offset_time - self.onset_time
+
+    def calc_curr_amplitude(self):
+        return self.amplitude
+
+    def calc_points_per_ms(self):
+        """Calculate data acquisition sampling rate, in points per ms"""
+        delta_t_sec = self.sweep.time()[1]- self.sweep.time()[0]
+        points_per_ms = 1/(delta_t_sec * 1000) 
+        return int(round(points_per_ms))
+
+    def calc_ms_per_point(self):
+        points_per_ms = 1/self.calc_or_read_from_cache('points_per_ms')
+        return points_per_ms
+
+
+    """ SPIKE PROPERTIES """
 
     def calc_spike_points(self):
         """ Calculates points where spikes occur (defined by voltage going  > -10 mV) """
@@ -312,6 +318,9 @@ class Response(object):
     def calc_doublet_index(self):
         return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
 
+
+    """ SAG/REBOUND PROPERTIES """
+
     def calc_peak_sag_idx_and_val(self):
         peak_sag_idx = np.argmin(self.sweep.data()[self.onset_pnt:self.offset_pnt])
         peak_sag_val = self.sweep.data()[peak_sag_idx]
@@ -427,6 +436,9 @@ class Response(object):
 
         reb_delta_t = (closest_pnt80-closest_pnt20)/self.calc_or_read_from_cache('points_per_ms')
         return reb_delta_t 
+
+
+    """ PLOT """
 
     def plot_response(self, filepath=None):
         plt.figure()
