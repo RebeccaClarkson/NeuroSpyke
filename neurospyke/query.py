@@ -3,7 +3,6 @@ import hashlib
 import pickle
 import os
 from neurospyke.utils import query_cache_dir
-from neurospyke.sweep import Sweep
 
 class Query(object):
     def __init__(self, cells, response_criteria=None, response_properties=None, 
@@ -70,10 +69,10 @@ class Query(object):
         return self.mean_df 
     
     def query_properties(self):
-        cell_criteria = list(self.cell_criteria.items())
-        response_criteria = list(self.response_criteria.items())
-        cell_properties = self.cell_properties
-        response_properties = self.response_properties
+        cell_criteria = sorted(list(self.cell_criteria.items()))
+        response_criteria = sorted(list(self.response_criteria.items()))
+        cell_properties = sorted(self.cell_properties)
+        response_properties = sorted(self.response_properties)
 
         cell_names = []
         for cell in self.cells:
