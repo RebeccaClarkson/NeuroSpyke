@@ -327,7 +327,7 @@ class Response(object):
         ISI_ms = ISI_idx/self.calc_or_read_from_cache('points_per_ms') 
         return(ISI_ms)
 
-    def calc_doublet_index(self, num_spikes=None):
+    def calc_doublet_index(self):
         return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
     
     def calc_doublet_index_by_num_spikes(self, num_spikes):

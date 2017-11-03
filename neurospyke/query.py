@@ -5,16 +5,32 @@ import os
 from neurospyke.utils import query_cache_dir
 
 class Query(object):
-    def __init__(self, cells, response_criteria=None, response_properties=None, 
+    def __init__(self, cells, response_criteria=None, response_properties=None, response_property_spike_categories=None,
             cell_criteria=None, cell_properties=None):
         self.cells = cells
 
         self.response_criteria = response_criteria or {}
         self.response_properties = response_properties or []
+        self.response_property_spike_categories = response_property_spike_categories or []
         self.cell_criteria = cell_criteria or {}
         self.cell_properties = cell_properties or []
 
         self.validate_parameters()   
+
+    def calc_response_properties_from_spike_categories(self, spike_categories):
+        calc_response_properties = []
+        for property_name in spike_categories:
+            for num_spikes in range(3, 9):
+                calc_response_properties.append(f"{property_name}__{num_spikes}")
+        return calc_response_properties
+
+    def validate_parameters(self):
+        # TODO: ensure num_spikes criterion is set if spike properties in property names 
+        if self.response_properties and self.response_property_spike_categories:
+            assert False, "Cannot have standalone response_properties if are querying spike_categories"   
+        elif self.response_property_spike_categories:
+            self.response_properties = self.calc_response_properties_from_spike_categories(
+                    self.response_property_spike_categories)
 
     @classmethod
     def create_or_load_from_cache(cls, cells, overwrite=False,  **kwargs):
@@ -40,9 +56,6 @@ class Query(object):
 
             return query
 
-    def validate_parameters(self):
-        # TODO: ensure num_spikes criterion is set if spike properties in property names 
-        pass 
 
     def run(self): 
         """
@@ -73,7 +86,7 @@ class Query(object):
         response_criteria = sorted(list(self.response_criteria.items()))
         cell_properties = sorted(self.cell_properties)
         response_properties = sorted(self.response_properties)
-
+        response_property_spike_categories = sorted(self.response_property_spike_categories)
         cell_names = []
         for cell in self.cells:
             cell_names.append(cell.calc_cell_name())
@@ -82,7 +95,8 @@ class Query(object):
         cell_criteria: {cell_criteria};
         response_criteria: {response_criteria};
         cell_properties: {cell_properties};
-        response_properties: {response_properties}
+        response_properties: {response_properties};
+        spike_categories: {response_property_spike_categories}
         """
         
     def create_analyzed_sweeps_dict(self):

@@ -19,21 +19,41 @@ def test_run():
     df1 = ex_query1.run()
     print(f"\nResult of test_run: \n {df1}") 
 
+def test_conflicting_properties():
+
+    response_criteria = {'sweep_time': '<150', 'curr_duration': .3}
+    response_property_spike_categories = [
+        'doublet_index_by_num_spikes', 
+        'delta_thresh_last_spike', 
+        'dVdt_pct_APamp_last_spike__20__rising'
+        ]
+    response_properties = ['num_spikes']
+    try:
+        Query(cells, response_criteria=response_criteria, 
+                response_properties=response_properties,
+                response_property_spike_categories=response_property_spike_categories)
+    except AssertionError:
+        assert True
+    else: 
+        assert False, "Did not catch AssertionError"
+
+
 def test_calc_doublet_index_with_num_spikes():
     response_criteria1 = {'curr_duration':.3}
-    response_properties1 = ['doublet_index__5']
+    response_properties1 = ['doublet_index_by_num_spikes']
     new_query = Query(cells, response_criteria=response_criteria1, 
-        response_properties=response_properties1)
+        response_property_spike_categories=response_properties1)
     new_query.run()
     df1 = new_query.mean_df
-    
+
     response_criteria2 = {'curr_duration':.3, 'num_spikes': 5}
     response_properties2 = ['doublet_index']
     new_query2 = Query(cells, response_criteria=response_criteria2, 
         response_properties=response_properties2)
     new_query2.run()
     df2 = new_query2.mean_df
-    assert np.allclose(df1['doublet_index__5'],  df2['doublet_index'])
+    print(df2)
+    assert np.allclose(df1['doublet_index_by_num_spikes__5'],  df2['doublet_index'])
 
 def test_last_spike_query():
     df1 = ex_query1.run()
