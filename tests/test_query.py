@@ -25,7 +25,19 @@ def test_last_spike_query():
             df1['dVdt_pct_APamp_last_spike__20__rising__5'])
     assert np.allclose(df1['delta_thresh4'], 
             df1['delta_thresh_last_spike__5'])
+   
+def test_last_spike_query_with_no_num_spikes_criteria():
+    response_criteria = {'curr_duration':.3}
+    response_properties = []
+    for num_spikes in range(3, 9):
+        response_properties.append(f"delta_thresh_last_spike__{num_spikes}")
     
+    new_query = Query(cells, response_criteria=response_criteria, 
+            response_properties=response_properties)
+    new_query.run()
+    print(new_query.mean_df)
+
+    assert False, "DONE FOR NOW"
 
 def test_query_properties():
     print(ex_query1.query_properties())
