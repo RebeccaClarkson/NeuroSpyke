@@ -19,6 +19,22 @@ def test_run():
     df1 = ex_query1.run()
     print(f"\nResult of test_run: \n {df1}") 
 
+def test_calc_doublet_index_with_num_spikes():
+    response_criteria1 = {'curr_duration':.3}
+    response_properties1 = ['doublet_index__5']
+    new_query = Query(cells, response_criteria=response_criteria1, 
+        response_properties=response_properties1)
+    new_query.run()
+    df1 = new_query.mean_df
+    
+    response_criteria2 = {'curr_duration':.3, 'num_spikes': 5}
+    response_properties2 = ['doublet_index']
+    new_query2 = Query(cells, response_criteria=response_criteria2, 
+        response_properties=response_properties2)
+    new_query2.run()
+    df2 = new_query2.mean_df
+    assert np.allclose(df1['doublet_index__5'],  df2['doublet_index'])
+
 def test_last_spike_query():
     df1 = ex_query1.run()
     assert np.allclose(df1['dVdt_pct_APamp__20__rising4'], 
@@ -31,13 +47,11 @@ def test_last_spike_query_with_no_num_spikes_criteria():
     response_properties = []
     for num_spikes in range(3, 9):
         response_properties.append(f"delta_thresh_last_spike__{num_spikes}")
-    
     new_query = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
     new_query.run()
     print(new_query.mean_df)
 
-    assert False, "DONE FOR NOW"
 
 def test_query_properties():
     print(ex_query1.query_properties())
