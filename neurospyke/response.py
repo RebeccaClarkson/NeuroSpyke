@@ -328,13 +328,12 @@ class Response(object):
         return(ISI_ms)
 
     def calc_doublet_index(self, num_spikes=None):
-        if num_spikes:
-            num_spikes = int(num_spikes)
-            if self.calc_or_read_from_cache('num_spikes') == num_spikes:
-                return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
-        else:
-            return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
-
+        return(self.calc_ISIs()[1]/self.calc_ISIs()[0]) 
+    
+    def calc_doublet_index_by_num_spikes(self, num_spikes):
+        num_spikes = int(num_spikes)
+        if self.calc_or_read_from_cache('num_spikes') == num_spikes:
+             return self.calc_or_read_from_cache('doublet_index')
 
     """ SAG/REBOUND PROPERTIES """
 
