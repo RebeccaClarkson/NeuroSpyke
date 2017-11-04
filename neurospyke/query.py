@@ -3,6 +3,7 @@ import hashlib
 import pickle
 import os
 from neurospyke.utils import query_cache_dir
+import numpy as np
 
 class Query(object):
     def __init__(self, cells, response_criteria=None, response_properties=None, response_property_spike_categories=None,
@@ -16,6 +17,8 @@ class Query(object):
         self.cell_properties = cell_properties or []
 
         self.validate_parameters()   
+        self.process_log_parameter_names()
+
 
     def calc_response_properties_from_spike_categories(self, spike_categories):
         calc_response_properties = []
@@ -23,6 +26,22 @@ class Query(object):
             for num_spikes in range(3, 9):
                 calc_response_properties.append(f"{property_name}__{num_spikes}")
         return calc_response_properties
+
+    def process_log_parameter_names(self):
+         
+        def get_log_properties(property_list):
+            log_property_names = []
+            for property_name in property_list:
+                if "log_" in property_name:
+                    # a list of all properties that will later take the log of
+                    log_property_names.append(property_name.replace('log_',''))
+            
+            # A list of all properties to be calculated
+            property_list_without_log = [property_name.replace('log_', '') for property_name in property_list]
+            return log_property_names, property_list_without_log 
+        
+        self.log_response_properties, self.response_properties = get_log_properties(self.response_properties)
+        self.log_cell_properties, self.cell_properties = get_log_properties(self.cell_properties)
 
     def validate_parameters(self):
         # TODO: ensure num_spikes criterion is set if spike properties in property names 
@@ -78,9 +97,19 @@ class Query(object):
 
         # added to query so that can be accessed with re-loaded query
         self.mean_df = mean_df[column_names]
+        self.process_log_parameter_values()
         self.analyzed_sweeps_dict = self.create_analyzed_sweeps_dict()
         return self.mean_df 
     
+    def process_log_parameter_values(self):
+        """
+        Adds a column to mean_df with the log of each requested "log" property 
+        """
+        log_properties = self.log_response_properties + self.log_cell_properties
+        for property_name in log_properties:
+            self.mean_df['log_'+property_name] = self.mean_df[property_name].apply(np.log)
+        
+
     def query_properties(self):
         cell_criteria = sorted(list(self.cell_criteria.items()))
         response_criteria = sorted(list(self.response_criteria.items()))

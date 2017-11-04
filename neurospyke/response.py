@@ -303,7 +303,6 @@ class Response(object):
 
     def calc_dVdt_pct_APamp_last_spike(self, percent, direction,  num_spikes):
         num_spikes = int(num_spikes)
-
         if self.calc_or_read_from_cache('num_spikes') == num_spikes:
             return self.calc_or_read_from_cache(f'dVdt_pct_APamp__{percent}__{direction}')[num_spikes-1]
 
