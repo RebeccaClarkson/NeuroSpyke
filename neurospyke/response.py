@@ -514,6 +514,7 @@ class Response(object):
         with self.plot_respons()
         """
         self.calc_or_read_from_cache('reb_delta_t')
+
         # These two values should be in cache when 'reb_delta_t' is in cache.
         closest_pnt20 = self._cache['closest_pnt20']
         closest_pnt80 = self._cache['closest_pnt80']
@@ -534,13 +535,16 @@ class Response(object):
                     arrowprops=dict(arrowstyle="<->"))
 
             # Add text for the arrows, at the middle point of both
-            xmin, xmax = plt.xlim();
-            ymin, ymax = plt.ylim();
+            xmin, xmax = ax1.get_xlim();
+            ymin, ymax = ax1.get_ylim();
             ax1.annotate(r'$\Delta$t', 
-                    xy=((reb_calc_times.iloc[0]+reb_calc_times.iloc[-1])/2, 
-                        reb_calc_data.iloc[0]-.05*(ymax-ymin)), ha='center')
-            ax1.annotate(r'$\Delta$amplitude', xy=(reb_calc_times.iloc[-1] + .02*(xmax-xmin), 
-                (reb_calc_data.iloc[0]+reb_calc_data.iloc[-1])/2 ), va='center')
+                xy=((reb_calc_times.iloc[0]+reb_calc_times.iloc[-1])/2, 
+                    reb_calc_data.iloc[0]-.08*(ymax-ymin)), 
+                ha='center')
+            ax1.annotate(r'$\Delta$amplitude', 
+                xy=(reb_calc_times.iloc[-1] + .02*(xmax-xmin), 
+                (reb_calc_data.iloc[0]+reb_calc_data.iloc[-1])/2 ), 
+                va='center')
         if filepath:
             plt.savefig(filepath)
         else:

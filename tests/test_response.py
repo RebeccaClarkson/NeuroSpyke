@@ -5,11 +5,13 @@ from neurospyke.utils import load_cells
 import numpy as np
 import pandas as pd
 
-data_dir_path1 = "tests/data/initial_examples/*.mat"
-image_save_path = "tests/data/images/"
 
-cells1 = load_cells(data_dir_path1)
-query1 = Query(cells1); query1.run()
+# load cells
+data_dir_path = "tests/data/initial_examples/*.mat"
+cells = load_cells(data_dir_path)
+
+# run query, select cells to exampe
+query1 = Query(cells); query1.run()
 cell1 = query1.cells[0]; cell2 = query1.cells[1]
 
 # response with 5 APs in response to a current injection
