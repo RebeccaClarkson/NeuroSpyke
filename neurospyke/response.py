@@ -12,14 +12,16 @@ class Response(object):
         self.amplitude = curr_inj_params['amplitude']
         self.sweep = sweep
         self._cache = {}
-        
 
     def criteria_priority(self):
+        """
+        This method sets "sweep_time" as the first criteria to be checked, as
+        this can speed processing time.
+        """
         first_criteria = ['sweep_time']
         response_criteria_names = set(self.sweep.cell.query.response_criteria.keys())
         response_criteria_names = response_criteria_names.difference(first_criteria)
         return first_criteria + sorted(response_criteria_names)
-
 
     def data(self):
         return self.sweep.sweep_df['data']
@@ -27,7 +29,14 @@ class Response(object):
     def time(self):
         return self.sweep.sweep_df['time']
 
+    def commands(self):
+        return self.sweep.sweep_df['commands']
+
     def calc_or_read_from_cache(self, attr_name_with_args):
+        """
+        This method either calculates the given attribute or gets it from the
+        cache if it has already been calculated.
+        """
         attr_pieces = attr_name_with_args.split('__') 
         attr_name = attr_pieces[0]
         args = attr_pieces[1:]
@@ -44,6 +53,9 @@ class Response(object):
             print(f"key: {key} value: {value}")
 
     def meets_criterion(self, criterion):
+        """
+        This method returns True if the response meets the given criterion.
+        """
         attr_name, condition = criterion
         value = self.calc_or_read_from_cache(attr_name)
 
@@ -64,12 +76,10 @@ class Response(object):
     def meets_criteria(self):
         criteria_dict = self.sweep.cell.query.response_criteria
         criteria_priority = self.criteria_priority()
-
         criteria_list = []
         for criteria in criteria_priority:
             if criteria in criteria_dict.keys():
                 criteria_list.append((criteria, criteria_dict[criteria]))
-
         return all(self.meets_criterion(criterion)
                 for criterion in criteria_list)
 
@@ -116,7 +126,9 @@ class Response(object):
         return window_df
 
 
-    """ BASIC PROPERTIES """
+####################################################################################################
+####################################   BASIC PROPERTIES    #########################################
+####################################################################################################
 
     def calc_sweep_time(self):
         return self.sweep.sweep_df.sweep_time[0]
@@ -138,7 +150,9 @@ class Response(object):
         return points_per_ms
 
 
-    """ SPIKE PROPERTIES """
+####################################################################################################
+####################################   SPIKE PROPERTIES    #########################################
+####################################################################################################
 
     def calc_spike_points(self):
         """ Calculates points where spikes occur (defined by voltage going  > -10 mV) """
@@ -319,7 +333,6 @@ class Response(object):
         if self.calc_or_read_from_cache('num_spikes') == num_spikes:
             return self.calc_or_read_from_cache('delta_thresh')[num_spikes-1]
 
-
     def calc_ISIs(self):
         idxs = self.calc_or_read_from_cache('APmax_idxs')
         ISI_idx = np.diff(idxs)  
@@ -334,7 +347,9 @@ class Response(object):
         if self.calc_or_read_from_cache('num_spikes') == num_spikes:
              return self.calc_or_read_from_cache('doublet_index')
 
-    """ SAG/REBOUND PROPERTIES """
+####################################################################################################
+#################################   SAG/REBOUND PROPERTIES    ######################################
+####################################################################################################
 
     def calc_peak_sag_idx_and_val(self):
         peak_sag_idx = np.argmin(self.sweep.data()[self.onset_pnt:self.offset_pnt])
@@ -416,12 +431,27 @@ class Response(object):
 
         return sag_amplitude 
 
-    def calc_max_rebound_amp(self):
+    def calc_max_rebound_amp_and_time(self, within=100):
         """
-        Returns the max rebound amplitude after current offset within the response window.
+        Returns the max rebound amplitude and time after  current offset within the response window
         """
         reb_data = self.data()[self.offset_pnt:]
-        return max(reb_data)
+        max_idx = np.argmax(reb_data)
+        max_val = reb_data[max_idx]
+
+        max_pnt_offset = max_idx - self.offset_pnt
+        max_rebound_location_ms = max_pnt_offset * self.calc_or_read_from_cache('ms_per_point')
+
+
+        return max_rebound_location_ms, max_val
+
+    def calc_max_rebound_amp(self):
+        _, max_val = self.calc_or_read_from_cache('max_rebound_amp_and_time')
+        return max_val
+
+    def calc_max_rebound_time(self):
+        max_rebound_location_ms, _ = self.calc_or_read_from_cache('max_rebound_amp_and_time')
+        return max_rebound_location_ms
 
     def find_nearest_pnt_series(self, pd_series, value):
         array = np.array(pd_series)
@@ -453,24 +483,36 @@ class Response(object):
         return reb_delta_t 
 
 
-    """ PLOT """
+####################################################################################################
+########################################       PLOT         ########################################
+####################################################################################################
 
     def plot_response(self, filepath=None):
-        plt.figure()
-        x1 = self.time(); y1 = self.data()
-        plt.plot(x1, y1, color='k')
-        plt.xlabel('time (s)')
-        plt.ylabel('mV')
+        fig, (ax1, ax2) = plt.subplots(2, sharex=True)
+
+        ax1.set_ylabel('mV'); 
+        ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
+        ax2.set_ylim([-450, 250])
+
+        ax1.plot(self.time(), self.data(), color='k')
+        ax2.plot(self.time(), self.commands(), color='k')
+
+        ax1.set_xlabel('time (s)')
+        ax1.set_ylabel('mV')
+        ax1.spines['bottom'].set_visible(False)
+        ax1.axes.get_xaxis().set_visible(False)
+        ax1.set_title(self.sweep.cell.calc_cell_name())
+
+        yield fig, (ax1, ax2)
 
         if filepath:
-            plt.savefig(filepath)
+            plt.savefig(filepath, bbox_inches="tight")
 
-    def plot_reb_delta_t(self, filepath):
+    def plot_reb_delta_t(self, filepath=None):
         """
         Adds annotations for reb_delta_t analysis to a figure object created
         with self.plot_respons()
         """
-        self.plot_response() 
         self.calc_or_read_from_cache('reb_delta_t')
         # These two values should be in cache when 'reb_delta_t' is in cache.
         closest_pnt20 = self._cache['closest_pnt20']
@@ -478,23 +520,28 @@ class Response(object):
 
         reb_calc_times = self.time()[closest_pnt20:closest_pnt80]
         reb_calc_data = self.data()[closest_pnt20:closest_pnt80]
-        plt.plot(reb_calc_times, reb_calc_data, color = 'r'); 
+        
+        for fig, (ax1, ax2) in self.plot_response():
 
-        # Add arrows to indicate where the measurements were taken from 
-        plt.annotate("", xy=(reb_calc_times.iloc[0], reb_calc_data.iloc[0]), 
-                xytext=(reb_calc_times.iloc[-1], reb_calc_data.iloc[0]),
-                arrowprops=dict(arrowstyle="<->"))
-        plt.annotate("", xy=(reb_calc_times.iloc[-1], reb_calc_data.iloc[0]), 
-                xytext=(reb_calc_times.iloc[-1], reb_calc_data.iloc[-1]),
-                arrowprops=dict(arrowstyle="<->"))
+            ax1.plot(reb_calc_times, reb_calc_data, color = 'r'); 
 
-        # Add text for the arrows, at the middle point of both
-        xmin, xmax = plt.xlim();
-        ymin, ymax = plt.ylim();
-        plt.annotate(r'$\Delta$t', 
-                xy=((reb_calc_times.iloc[0]+reb_calc_times.iloc[-1])/2, reb_calc_data.iloc[0]-.05*(ymax-ymin)), 
-                ha='center')
-        plt.annotate(r'$\Delta$amplitude', xy=(reb_calc_times.iloc[-1] + .02*(xmax-xmin), 
-            (reb_calc_data.iloc[0]+reb_calc_data.iloc[-1])/2 ), va='center')
-        plt.title(self.sweep.cell.calc_cell_name())
-        plt.savefig(filepath)
+            # Add arrows to indicate where the measurements were taken from 
+            ax1.annotate("", xy=(reb_calc_times.iloc[0], reb_calc_data.iloc[0]), 
+                    xytext=(reb_calc_times.iloc[-1], reb_calc_data.iloc[0]),
+                    arrowprops=dict(arrowstyle="<->"))
+            ax1.annotate("", xy=(reb_calc_times.iloc[-1], reb_calc_data.iloc[0]), 
+                    xytext=(reb_calc_times.iloc[-1], reb_calc_data.iloc[-1]),
+                    arrowprops=dict(arrowstyle="<->"))
+
+            # Add text for the arrows, at the middle point of both
+            xmin, xmax = plt.xlim();
+            ymin, ymax = plt.ylim();
+            ax1.annotate(r'$\Delta$t', 
+                    xy=((reb_calc_times.iloc[0]+reb_calc_times.iloc[-1])/2, 
+                        reb_calc_data.iloc[0]-.05*(ymax-ymin)), ha='center')
+            ax1.annotate(r'$\Delta$amplitude', xy=(reb_calc_times.iloc[-1] + .02*(xmax-xmin), 
+                (reb_calc_data.iloc[0]+reb_calc_data.iloc[-1])/2 ), va='center')
+        if filepath:
+            plt.savefig(filepath)
+        else:
+            plt.show()

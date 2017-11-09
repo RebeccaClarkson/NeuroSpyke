@@ -15,8 +15,7 @@ def D1_D3_scatter_subplots(df, xy_pairs, output_path):
         if i == 1:
             plt.legend()
         i += 1
-    plt.suptitle('D1R- vs D3R-expressing pyramidal neuron electrophysiology')
-    plt.savefig(output_path)
+    plt.savefig(output_path, bbox_inches="tight")
 
 
 def D1_D3_scatter_plot(df, x_property, y_property, output_dir=None, new_figure=1):
@@ -29,7 +28,7 @@ def D1_D3_scatter_plot(df, x_property, y_property, output_dir=None, new_figure=1
 
     if new_figure:  
         plt.figure()
-
+    
     plt.scatter(D1_cells[x_property], D1_cells[y_property], 
             marker = 'o', color = 'k', label='D1')
     plt.scatter(D3_cells[x_property], D3_cells[y_property],
@@ -79,9 +78,12 @@ rgb_colors['dodgerblue'] = (.12, .56, 1)
 
 # property_label_dict for use in creation of axis label names
 property_label_dict = {
-        'dVdt_at_percent_APamp__20__rising#' : f"dVdt (AP#) @ 20% AP amp.",
+        'dVdt_pct_APamp__20__rising#' : f"dVdt (AP#) @ 20% AP amp.",
+        'dVdt_pct_APamp_last_spike__20__rising__#': f"dVdt (AP#) @ 20% AP amp.",
         'delta_thresh#': r'$\Delta$' + f"threshold (mV), AP# vs. AP1",
+        'delta_thresh_last_spike__#': r'$\Delta$' + f"threshold (mV), AP# vs. AP1",
         'doublet_index': 'doublet index (ISI2/ISI1)',
+        'doublet_index_by_num_spikes__#': 'doublet index (ISI2/ISI1)',
         'reb_delta_t' : f"rebound " + r'$\tau$' + ' (ms)',
         'sag_fit_amplitude' : f"sag amplitude (mv)"
         }

@@ -1,9 +1,9 @@
-import pandas as pd
-import hashlib
-import pickle
-import os
 from neurospyke.utils import query_cache_dir
+import hashlib
 import numpy as np
+import os
+import pandas as pd
+import pickle
 
 class Query(object):
     def __init__(self, cells, response_criteria=None, response_properties=None, response_property_spike_categories=None,
@@ -18,7 +18,6 @@ class Query(object):
 
         self.validate_parameters()   
         self.process_log_parameter_names()
-
 
     def calc_response_properties_from_spike_categories(self, spike_categories):
         calc_response_properties = []
