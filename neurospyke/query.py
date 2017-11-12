@@ -59,7 +59,7 @@ class Query(object):
         tmp_query = cls(cells, **kwargs)
         path_exists =  os.path.isfile(tmp_query.query_cache_filename())
         if overwrite or not path_exists:
-            #print(f"\nMaking new query")
+            print(f"\nMaking new query")
             tmp_query.run()
             tmp_query.save_query()
             return tmp_query
@@ -71,7 +71,6 @@ class Query(object):
             for cell in query.cells:
                 cell.query = query
                 cell.analyzed_sweep_ids = query.analyzed_sweeps_dict[cell.calc_cell_name()]
-
             return query
 
 
@@ -108,8 +107,20 @@ class Query(object):
         for property_name in log_properties:
             self.mean_df['log_'+property_name] = self.mean_df[property_name].apply(np.log)
         
+    def create_analyzed_sweeps_dict(self):
+        """
+        Stores in the query  all analyzed sweep_ids for each cell in the query, so can work with
+        these sweeps in a re-loaded query.
+        """
+        cell_names = [cell.calc_cell_name() for cell in self.cells]
+        analyzed_sweep_ids = [cell.analyzed_sweep_ids for cell in self.cells]
+        analyzed_sweeps_dict = dict(zip(cell_names, analyzed_sweep_ids))
+        return analyzed_sweeps_dict
 
     def query_properties(self):
+        """
+        Returns a string that has all parameters that can be used to create a query.
+        """
         cell_criteria = sorted(list(self.cell_criteria.items()))
         response_criteria = sorted(list(self.response_criteria.items()))
         cell_properties = sorted(self.cell_properties)
@@ -126,23 +137,19 @@ class Query(object):
         response_properties: {response_properties};
         spike_categories: {response_property_spike_categories}
         """
-        
-    def create_analyzed_sweeps_dict(self):
-        """
-        Stores in the query  all analyzed sweep_ids for each cell in the query, so can work with
-        these sweeps in a re-loaded query.
-        """
-        cell_names = [cell.calc_cell_name() for cell in self.cells]
-        analyzed_sweep_ids = [cell.analyzed_sweep_ids for cell in self.cells]
-        analyzed_sweeps_dict = dict(zip(cell_names, analyzed_sweep_ids))
-        return analyzed_sweeps_dict
 
     def query_id(self):
+        """
+        Creates a unique query id based on all query properties.
+        """
         q = hashlib.sha256()
         q.update(bytes(str(self.query_properties()), encoding="ASCII"))
         return q.hexdigest()
 
     def query_cache_filename(self):
+        """
+        Genetates a filename for storing the query.
+        """
         return os.path.join(query_cache_dir, f"{self.query_id()}.pickle")
 
     def is_cached(self):

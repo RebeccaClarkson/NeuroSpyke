@@ -1,7 +1,7 @@
 from inflection import humanize
 import matplotlib.pyplot as plt
 
-def D1_D3_scatter_subplots(df, xy_pairs, output_path):
+def D1_D3_scatter_subplots(df, xy_pairs, output_path=None):
     number_of_subplots = len(xy_pairs)
     columns = 2
     rows = number_of_subplots%columns + number_of_subplots//columns
@@ -15,7 +15,10 @@ def D1_D3_scatter_subplots(df, xy_pairs, output_path):
         if i == 1:
             plt.legend()
         i += 1
-    plt.savefig(output_path, bbox_inches="tight")
+    if output_path:
+        plt.savefig(output_path, bbox_inches="tight")
+    else:
+        plt.show()
 
 
 def D1_D3_scatter_plot(df, x_property, y_property, output_dir=None, new_figure=1):

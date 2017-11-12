@@ -52,7 +52,7 @@ def reorder_df(df, first_columns):
 
 
 
-def plot_classifier_comparison(full_df, file_path):
+def plot_classifier_comparison(full_df, file_path=None):
     """ Compare published classifier with classifier from this subset of data"""
     LDA_coeff = pd.read_csv("neurospyke/data/LDA_coefficients.csv")
     LDA_dist_values = pd.read_csv("neurospyke/data/LDA_distributions.csv")
@@ -106,8 +106,10 @@ def plot_classifier_comparison(full_df, file_path):
     
         # plot the score distributions that established the published classifier
         x_vals = np.arange(-10, 10, .01) 
-        plt.plot(x_vals, norm.pdf(x_vals, D1_dist_mean, D1_dist_std),color = 'k')
-        plt.plot(x_vals, norm.pdf(x_vals, D3_dist_mean, D3_dist_std), color=rgb_colors['dodgerblue'])
+        plt.plot(x_vals, norm.pdf(x_vals, D1_dist_mean, D1_dist_std),
+                color = 'k', label='D1R+ (matlab, n=40)')
+        plt.plot(x_vals, norm.pdf(x_vals, D3_dist_mean, D3_dist_std), 
+                color=rgb_colors['dodgerblue'], label='D3R+ (matlab, n=50)')
     
         """
         Generate a discriminant fit with current cell subset analyzed with python
@@ -139,22 +141,27 @@ def plot_classifier_comparison(full_df, file_path):
         x_vals = np.arange(-10, 10, .01) 
         plt.plot(x_vals, 
                 norm.pdf(x_vals, np.nanmean(score_D1), np.nanstd(score_D1)), 
-                '--', color = 'k')
+                '--', color = 'k', label=f'D1R+ (python, n={len(score_D1)})')
         plt.plot(x_vals, 
                 norm.pdf(x_vals, np.nanmean(score_D3), np.nanstd(score_D3)), 
-                '--', color=rgb_colors['dodgerblue'])
+                '--', color=rgb_colors['dodgerblue'], label=f'D3R+ (python, n={len(score_D3)})')
     
-        ax.set_xlabel('score')
-        ax.set_ylabel('probability')
-        ax.set_xlim([-10, 8]); ax.set_ylim([0, .5])
-        ax.set_title(f"{num_spikes} APs")
-    
+        plt.xlabel('score')
+        plt.ylabel('probability')
+        plt.xlim([-10, 8]); ax.set_ylim([0, .5])
+        plt.title(f"{num_spikes} APs")
+
+        if i == 2:
+            plt.legend(bbox_to_anchor=(1.15, 1), frameon=False)
 
         if i % 2 == 0:
             ax.get_yaxis().set_visible(False)
             ax.spines['left'].set_visible(False)
         
         i +=1
-
     fig.set_size_inches(10.5, 15, forward=True)
-    plt.savefig(file_path, bbox_inches="tight")
+    if file_path:
+        plt.savefig(file_path, bbox_inches="tight")
+    else:
+        plt.show()
+
