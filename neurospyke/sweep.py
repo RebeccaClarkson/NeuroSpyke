@@ -12,7 +12,6 @@ class Sweep(object):
         reponse_criteria, for all response_properties.
         """
         results_df = None
-
         for response in self.responses():
             if response.meets_criteria():
                 if results_df is None:

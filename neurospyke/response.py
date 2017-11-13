@@ -20,8 +20,11 @@ class Response(object):
         """
         first_criteria = ['sweep_time']
         response_criteria_names = set(self.sweep.cell.query.response_criteria.keys())
-        response_criteria_names = response_criteria_names.difference(first_criteria)
-        return first_criteria + sorted(response_criteria_names)
+        if 'sweep_time' in response_criteria_names:
+            response_criteria_names = response_criteria_names.difference(first_criteria)
+            return first_criteria + sorted(response_criteria_names)
+        else:
+            return sorted(response_criteria_names)
 
     def data(self):
         return self.sweep.sweep_df['data']
@@ -60,7 +63,7 @@ class Response(object):
         value = self.calc_or_read_from_cache(attr_name)
 
         if isinstance(condition, str):
-            condition_val_str = ''.join([s for s in condition if s.isdigit()])
+            condition_val_str = ''.join([s for s in condition if s.isdigit() or '.' in s])
             condition_val = float(condition_val_str) 
             if "<" in condition and ">" in condition:
                 raise Exception("TODO")   
