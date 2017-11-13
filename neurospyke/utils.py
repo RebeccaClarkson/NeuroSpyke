@@ -9,7 +9,6 @@ import os
 import pandas as pd
 import pickle 
 
-
 cache_dir = 'cached_data/'
 cell_cache_dir = cache_dir + 'cells/'
 query_cache_dir = cache_dir + 'queries/'
@@ -49,8 +48,6 @@ def concat_dfs_by_index(df1, df2):
 def reorder_df(df, first_columns):
     reordered = first_columns + [c for c in df.columns if c not in first_columns]
     return df[reordered]
-
-
 
 def plot_classifier_comparison(full_df, file_path=None):
     """ Compare published classifier with classifier from this subset of data"""

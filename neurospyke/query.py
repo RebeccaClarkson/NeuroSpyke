@@ -6,8 +6,11 @@ import pandas as pd
 import pickle
 
 class Query(object):
-    def __init__(self, cells, response_criteria=None, response_properties=None, response_property_spike_categories=None,
+    def __init__(self, cells, 
+            response_criteria=None, response_properties=None, 
+            response_property_spike_categories=None,
             cell_criteria=None, cell_properties=None):
+
         self.cells = cells
 
         self.response_criteria = response_criteria or {}
@@ -36,7 +39,8 @@ class Query(object):
                     log_property_names.append(property_name.replace('log_',''))
             
             # A list of all properties to be calculated
-            property_list_without_log = [property_name.replace('log_', '') for property_name in property_list]
+            property_list_without_log = [property_name.replace('log_', '') 
+                    for property_name in property_list]
             return log_property_names, property_list_without_log 
         
         self.log_response_properties, self.response_properties = get_log_properties(self.response_properties)

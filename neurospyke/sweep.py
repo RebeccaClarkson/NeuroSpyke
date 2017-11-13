@@ -39,23 +39,29 @@ class Sweep(object):
         """
         curr_inj_waveform_list = []
         assert self.commands()[0] == 0
-    
-        delta_curr = self.commands().diff()
+        
+        # Removes nan from the commands. Perhaps this should be done at an
+        # earlier step, with more data checks. 
+        commands = self.commands().dropna()
+             
+        delta_curr = commands.diff()
+
         delta_curr[0] = 0
         non_zero = delta_curr.nonzero()[0]
         num_commands = int(len(non_zero))
         assert num_commands % 2 == 0 # should have even number of command steps 
-    
+        
+        
         for i in range(0, num_commands, 2): # verify these are symmetrical square waves pulses
             this_val = delta_curr.iloc[non_zero].values[i] 
             next_val = delta_curr.iloc[non_zero].values[i+1]
-    
+
             assert this_val == -next_val
             onset = non_zero[i]; offset = non_zero[i+1] 
 
             onset_time = self.time().iloc[onset] 
             offset_time = self.time().iloc[offset]
-            wave_amplitude = self.commands().iloc[onset]
+            wave_amplitude = commands.iloc[onset]
             sweep_index = self.sweep_index() 
     
             # Now that have all the values, append to list 
