@@ -103,7 +103,7 @@ class Response(object):
         """
         response_properties = self.sweep.cell.query.response_properties 
         results_dict = self.calc_properties(response_properties)
-        return pd.DataFrame([results_dict])
+        return pd.DataFrame([results_dict], index=[self.sweep.sweep_index()])
 
     def window(self, left_window=50, right_window=50):
         """
@@ -255,6 +255,7 @@ class Response(object):
             #TODO assert that monotonically increasing?
             #TODO for classifier this should be -1, but may want to look at first point >15 mV/ms
             thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1
+            #thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) 
              
             thresh_idxs.append(thresh_idx)
             thresh_vals.append(self.sweep.data()[thresh_idx])
@@ -263,6 +264,16 @@ class Response(object):
     def calc_threshold_idxs(self):
         idxs, _ = self.calc_or_read_from_cache('threshold_idx_and_vals')
         return np.array(idxs)
+
+    def calc_threshold_timing(self):
+        """
+        This method returns the the timing (in ms) of each AP threshold with
+        respect to initial current onset. 
+        """
+        thresh_idxs = self.calc_or_read_from_cache('threshold_idxs')
+        threshold_offset_pnts = thresh_idxs - self.onset_pnt
+        return threshold_offset_pnts * self.calc_or_read_from_cache('ms_per_point')
+        
 
     def calc_threshold_vals(self):
         _, vals = self.calc_or_read_from_cache('threshold_idx_and_vals')

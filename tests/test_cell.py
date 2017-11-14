@@ -7,7 +7,8 @@ import pandas as pd
 
 data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
-query = Query(cells); query.run()
+query = Query(cells) 
+query.run()
 cell1 = query.cells[0]; cell2 = query.cells[1]
 
 ####################################################################################################

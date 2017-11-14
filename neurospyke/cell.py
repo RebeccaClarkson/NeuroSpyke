@@ -145,14 +145,31 @@ class Cell(object):
         response_df = self.response_properties_df()
 
         if response_df is not None:
-            mean_series = response_df.mean()
-            mean_response_df = pd.DataFrame(
-                    [list(mean_series.values)], columns=list(mean_series.index), 
-                    index=[self.calc_cell_name()]
-                    )
+            if self.query.cell_criteria['rheobase']:
+                assert self.query.cell_criteria['rheobase']
+                threshold_timing_col_bool = len([
+                        col for col in response_df.columns if 'threshold_timing' in col]) > 0
+                assert threshold_timing_col_bool, "Threshold timing is required to determine rheobase"
+                assert self.query.response_criteria[
+                         'num_spikes'] == 1, "Rheobase only defined for num_spikes = 1"
+
+                min_thresh_timing_idx = response_df['threshold_timing0'].argmin()
+
+                #TODO: make sure this will always overwrite self.analyzed_sweeps from self.valid_responses()
+                self.analyzed_sweep_ids = [min_thresh_timing_idx]
+
+                rheobase_df = response_df.loc[[min_thresh_timing_idx]]
+                rheobase_df.index = [self.calc_cell_name()]
+                return rheobase_df
+            else:
+                mean_series = response_df.mean()
+                mean_response_df = pd.DataFrame(
+                        [list(mean_series.values)], columns=list(mean_series.index), 
+                        index=[self.calc_cell_name()]
+                        )
+                return mean_response_df
         else: 
-            mean_response_df=None
-        return mean_response_df
+            return None
 
     def calc_cell_properties_df(self):
         """

@@ -16,7 +16,12 @@ class Query(object):
         self.response_criteria = response_criteria or {}
         self.response_properties = response_properties or []
         self.response_property_spike_categories = response_property_spike_categories or []
-        self.cell_criteria = cell_criteria or {}
+        self.cell_criteria = cell_criteria or {'rheobase': False}
+        
+        if 'rheobase' not in list(self.cell_criteria.keys()): 
+            self.cell_criteria['rheobase'] = False
+
+
         self.cell_properties = cell_properties or []
 
         self.validate_parameters()   
