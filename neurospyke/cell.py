@@ -68,6 +68,9 @@ class Cell(object):
     def calc_ca_buffer(self):
         return self.cell['CaBuffer'][0,0][0]
 
+    def age(self):
+        return self.cell['age'][0,0][0]
+
     def time(self):
         return self.cell['time'][0,0].T
 

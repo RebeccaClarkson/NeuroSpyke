@@ -295,16 +295,17 @@ class Response(object):
         This method calculates dVdt for each AP in the response, at a given
         percent of AP amplitude.
         """
-        percent = int(percent)
         num_spikes = self.calc_or_read_from_cache('num_spikes')
         dVdt = self.calc_or_read_from_cache('dVdt_mV_per_ms')
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
         AHP_idx = self.calc_or_read_from_cache('AHP_idxs') 
         
-        amplitudes_at_percent = self.calc_val_pct_APamp(percent) 
+        if percent.isdigit():
+            amplitudes_at_percent = self.calc_val_pct_APamp(int(percent))
+
         dVdt_vals = []
 
-        for i in range(num_spikes):
+        for i in range(num_spikes): 
             if direction == 'rising':
                 if i == 0: 
                     start_idx = self.onset_pnt
@@ -319,14 +320,19 @@ class Response(object):
                 else:
                     stop_idx = self.offset_pnt
             
-            amplitude_at_percent = amplitudes_at_percent[i] 
-            
-            values_to_search = self.sweep.data()[start_idx:stop_idx]
-            idx = np.argmin(abs(values_to_search-amplitude_at_percent))
+            spike_data = self.sweep.data()[start_idx:stop_idx]
+            dVdt_data = dVdt[start_idx:stop_idx]
 
-            dVdt_val = np.float(dVdt[idx])
+            if percent.isdigit():
+                amplitude_at_percent = amplitudes_at_percent[i] 
+                idx = np.argmin(abs(spike_data-amplitude_at_percent))
+                dVdt_val = np.float(dVdt[idx])
+            elif percent == 'max':
+                dVdt_val = np.float(np.max(dVdt_data))
+                
+            # append value as float to dVdt_vals
             dVdt_vals.append(dVdt_val)
-
+            
         return np.array(dVdt_vals)
 
     def calc_dVdt_pct_APamp_last_spike(self, percent, direction,  num_spikes):
