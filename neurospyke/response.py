@@ -289,8 +289,33 @@ class Response(object):
         return amplitude_at_percent
     
     def calc_APwidth(self, percent):
-        pass
+        num_spikes = self.calc_or_read_from_cache('num_spikes')
 
+        rising_start_idxs = self.AP_start_idxs(num_spikes, 'rising')
+        rising_stop_idxs = self.AP_stop_idxs(num_spikes, 'rising')
+        falling_start_idxs = self.AP_start_idxs(num_spikes, 'falling')
+        falling_stop_idxs = self.AP_stop_idxs(num_spikes, 'falling')
+
+        amplitudes_at_percent = self.calc_val_pct_APamp(int(percent))
+        spike_widths = []
+        for i in range(num_spikes):
+            rising_start_idx = rising_start_idxs[i]
+            rising_stop_idx = rising_stop_idxs[i]
+            falling_start_idx = falling_start_idxs[i]
+            falling_stop_idx = falling_stop_idxs[i]
+            
+            rising_spike_data = self.sweep.data()[rising_start_idx:rising_stop_idx]
+            falling_spike_data = self.sweep.data()[falling_start_idx:falling_stop_idx]
+
+            amplitude_at_percent = amplitudes_at_percent[i]
+            idx_rising = np.argmin(abs(rising_spike_data-amplitude_at_percent))
+            idx_falling = np.argmin(abs(falling_spike_data-amplitude_at_percent))
+
+            spike_width = (idx_falling-idx_rising) * self.calc_or_read_from_cache('ms_per_point')
+            spike_widths.append(spike_width)
+
+        return spike_widths
+            
 
     def AP_start_idxs(self, num_spikes, direction):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
@@ -306,7 +331,6 @@ class Response(object):
                 start_idx = AP_max_idx[i]
             start_idxs.append(start_idx)
         return start_idxs
-
 
     def AP_stop_idxs(self, num_spikes, direction):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')

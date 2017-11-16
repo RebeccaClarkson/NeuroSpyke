@@ -143,7 +143,13 @@ def test_calc_val_pct_APamp():
     calc_vals = response_obj_5AP.calc_val_pct_APamp(percent=20)
     known_vals = np.array([-25.1947, -24.1427, -24.5680, -24.9613, -24.7053])
     assert np.allclose(calc_vals, known_vals)
-    
+
+# AP width    
+def test_calc_AP_width():
+    calc_vals = response_obj_5AP.calc_APwidth(percent=50)
+    known_vals = [0.85, 1.4, 1.2, 1.1, 1.1]
+    assert np.allclose(calc_vals, known_vals)
+
 # dVdt rising 
 def test_calc_dVdt_rising_pct_APamplitude():
     calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent='20', direction='rising')
@@ -153,8 +159,9 @@ def test_calc_dVdt_rising_pct_APamplitude():
     known_vals = [-54.6667,-28.3333,-33.2000,-38.0667,-38.0667]
     assert np.allclose(calc_vals, known_vals)
 
-    #TODO write test for percent = 'max'
     calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent='max', direction='rising')
+    known_vals = [433.6, 345.73, 372.0667, 379.8667, 377.9333]
+    assert np.allclose(calc_vals, known_vals)
 
 def test_calc_dVdt_pct_APamp_last_spike():
     calc_val = response_obj_5AP.calc_dVdt_pct_APamp_last_spike(
