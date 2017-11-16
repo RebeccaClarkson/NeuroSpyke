@@ -120,10 +120,10 @@ def test_calc_APmax_idx_and_val():
 # AHP
 def test_calc_AHP_idx_and_val():
     calc_idx, calc_vals = response_obj_5AP.calc_AHP_idx_and_vals()
-    known_vals = np.array([-47.7533, -47.8533,-50.1000, -51.2667])
-    assert np.allclose(calc_vals, known_vals)
-    known_idx = np.array([2863, 3528, 4342, 5810])
-    assert np.allclose(calc_idx, known_idx)
+    known_vals = np.array([-47.7533, -47.8533,-50.1000, -51.2667, np.nan])
+    assert np.allclose(calc_vals, known_vals, equal_nan=True)
+    known_idx = np.array([2863, 3528, 4342, 5810, np.nan])
+    assert np.allclose(calc_idx, known_idx, equal_nan=True)
 
 # Threshold
 def test_calc_threshold_and_vals():
@@ -132,6 +132,14 @@ def test_calc_threshold_and_vals():
     known_vals = np.array([-43.5533, -41.2133, -42.3800, -42.7733, -42.3800])
     assert np.allclose(calc_idxs, known_idxs)
     assert np.allclose(calc_vals, known_vals)
+
+# AHP compared to threshold
+def test_AHP_vs_threshold():
+    threshold_vals = response_obj_5AP.calc_threshold_vals()
+    AHP_vals = response_obj_5AP.calc_AHP_vals()
+    known_vals = AHP_vals - threshold_vals
+    calc_vals = response_obj_5AP.calc_AHP_vs_threshold()
+    assert np.allclose(known_vals, calc_vals, equal_nan=True)
 
 # AP amplitude
 def test_AP_amplitudes():
@@ -146,7 +154,7 @@ def test_calc_val_pct_APamp():
 
 # AP width
 def test_calc_AP_width():
-    calc_vals = response_obj_5AP.calc_APwidth(percent=50)
+    calc_vals = response_obj_5AP.calc_AP_width(percent=50)
     known_vals = [0.85, 1.4, 1.2, 1.1, 1.1]
     assert np.allclose(calc_vals, known_vals)
 
@@ -158,7 +166,6 @@ def test_calc_dVdt_rising_pct_APamplitude():
     calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent='20', direction='falling')
     known_vals = [-54.6667,-28.3333,-33.2000,-38.0667,-38.0667]
     assert np.allclose(calc_vals, known_vals)
-
     calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent='max', direction='rising')
     known_vals = [433.6, 345.73, 372.0667, 379.8667, 377.9333]
     assert np.allclose(calc_vals, known_vals)

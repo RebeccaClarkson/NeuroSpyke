@@ -210,16 +210,29 @@ class Response(object):
         APmax_idxs = self.calc_or_read_from_cache('APmax_idxs')
         
         AHP_idxs = []; AHP_vals = []
-        for i in range(num_spikes-1):
-            # find min voltage that occurs between given AP max and next AP max
-            start_idx = APmax_idxs[i]
-            stop_idx = APmax_idxs[i+1]
+        if num_spikes == 1:
+            # for rheobase calculations
+            start_idx = APmax_idxs[0]
+            stop_idx = self.offset_pnt
             min_idx = np.argmin(self.sweep.data()[start_idx:stop_idx])
             min_val = self.sweep.data()[min_idx]
-            
-            # append values
             AHP_vals.append(min_val)
             AHP_idxs.append(min_idx)
+        else:
+            for i in range(num_spikes-1):
+                # find min voltage that occurs between given AP max and next AP max
+                start_idx = APmax_idxs[i]
+                stop_idx = APmax_idxs[i+1]
+                min_idx = np.argmin(self.sweep.data()[start_idx:stop_idx])
+                min_val = self.sweep.data()[min_idx]
+                
+                # append values
+                AHP_vals.append(min_val)
+                AHP_idxs.append(min_idx)
+            # in order to have len(AHP_vals) and len(AHP_idxs) == num_spikes
+            AHP_vals.append(np.nan)
+            AHP_idxs.append(np.nan)
+
         return np.array(AHP_idxs), np.array(AHP_vals)
 
     def calc_AHP_vals(self):
@@ -246,11 +259,10 @@ class Response(object):
 
         for i in range(num_spikes):
             if i == 0:
-                start_idx = self.onset_pnt
+                start_idx = int(self.onset_pnt)
             else: 
-                start_idx = AHP_idx[i-1]
-            stop_idx = AP_max_idx[i] 
-            
+                start_idx = int(AHP_idx[i-1])
+            stop_idx = int(AP_max_idx[i])
             #TODO assert that monotonically increasing?
             #TODO for classifier this should be -1, but may want to look at first point >15 mV/ms
             thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1
@@ -276,6 +288,11 @@ class Response(object):
     def calc_threshold_vals(self):
         _, vals = self.calc_or_read_from_cache('threshold_idx_and_vals')
         return np.array(vals)
+
+    def calc_AHP_vs_threshold(self):
+        AHP_vals = self.calc_or_read_from_cache('AHP_vals')
+        threshold_vals = self.calc_or_read_from_cache('threshold_vals')
+        return AHP_vals - threshold_vals
     
     def calc_AP_amplitudes(self):
         AP_max = self.calc_or_read_from_cache('APmax_vals')
@@ -288,7 +305,7 @@ class Response(object):
         amplitude_at_percent = thresh_vals + AP_amplitudes * percent/100
         return amplitude_at_percent
     
-    def calc_APwidth(self, percent):
+    def calc_AP_width(self, percent):
         num_spikes = self.calc_or_read_from_cache('num_spikes')
 
         rising_start_idxs = self.AP_start_idxs(num_spikes, 'rising')
@@ -299,10 +316,10 @@ class Response(object):
         amplitudes_at_percent = self.calc_val_pct_APamp(int(percent))
         spike_widths = []
         for i in range(num_spikes):
-            rising_start_idx = rising_start_idxs[i]
-            rising_stop_idx = rising_stop_idxs[i]
-            falling_start_idx = falling_start_idxs[i]
-            falling_stop_idx = falling_stop_idxs[i]
+            rising_start_idx = int(rising_start_idxs[i])
+            rising_stop_idx = int(rising_stop_idxs[i])
+            falling_start_idx = int(falling_start_idxs[i])
+            falling_stop_idx = int(falling_stop_idxs[i])
             
             rising_spike_data = self.sweep.data()[rising_start_idx:rising_stop_idx]
             falling_spike_data = self.sweep.data()[falling_start_idx:falling_stop_idx]
@@ -310,11 +327,10 @@ class Response(object):
             amplitude_at_percent = amplitudes_at_percent[i]
             idx_rising = np.argmin(abs(rising_spike_data-amplitude_at_percent))
             idx_falling = np.argmin(abs(falling_spike_data-amplitude_at_percent))
-
             spike_width = (idx_falling-idx_rising) * self.calc_or_read_from_cache('ms_per_point')
-            spike_widths.append(spike_width)
+            spike_widths.append(np.float(spike_width))
 
-        return spike_widths
+        return np.array(spike_widths)
 
     def AP_start_idxs(self, num_spikes, direction):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
@@ -328,7 +344,7 @@ class Response(object):
                     start_idx = AHP_idx[i-1]
             elif direction == 'falling':
                 start_idx = AP_max_idx[i]
-            start_idxs.append(start_idx)
+            start_idxs.append(int(start_idx))
         return start_idxs
 
     def AP_stop_idxs(self, num_spikes, direction):
@@ -343,7 +359,7 @@ class Response(object):
                     stop_idx = AHP_idx[i] 
                 else:
                     stop_idx = self.offset_pnt
-            stop_idxs.append(stop_idx)
+            stop_idxs.append(int(stop_idx))
         return stop_idxs
 
     def calc_dVdt_pct_APamp(self, percent, direction):
