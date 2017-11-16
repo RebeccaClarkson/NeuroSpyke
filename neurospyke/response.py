@@ -205,7 +205,6 @@ class Response(object):
         idxs, _ = self.calc_or_read_from_cache('APmax_idx_and_val')
         return np.array(idxs)
 
-        
     def calc_AHP_idx_and_vals(self):
         num_spikes = self.calc_or_read_from_cache('num_spikes')
         APmax_idxs = self.calc_or_read_from_cache('APmax_idxs')
@@ -273,7 +272,6 @@ class Response(object):
         thresh_idxs = self.calc_or_read_from_cache('threshold_idxs')
         threshold_offset_pnts = thresh_idxs - self.onset_pnt
         return threshold_offset_pnts * self.calc_or_read_from_cache('ms_per_point')
-        
 
     def calc_threshold_vals(self):
         _, vals = self.calc_or_read_from_cache('threshold_idx_and_vals')
@@ -290,36 +288,56 @@ class Response(object):
         amplitude_at_percent = thresh_vals + AP_amplitudes * percent/100
         return amplitude_at_percent
     
-    def calc_dVdt_pct_APamp(self, percent,  direction):
-        """
-        This method calculates dVdt for each AP in the response, at a given
-        percent of AP amplitude.
-        """
-        num_spikes = self.calc_or_read_from_cache('num_spikes')
-        dVdt = self.calc_or_read_from_cache('dVdt_mV_per_ms')
+    def calc_APwidth(self, percent):
+        pass
+
+
+    def AP_start_idxs(self, num_spikes, direction):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
         AHP_idx = self.calc_or_read_from_cache('AHP_idxs') 
+        start_idxs = []
+        for i in range(num_spikes):
+            if direction == 'rising':
+                if i == 0:
+                    start_idx = self.onset_pnt
+                else:
+                    start_idx = AHP_idx[i-1]
+            elif direction == 'falling':
+                start_idx = AP_max_idx[i]
+            start_idxs.append(start_idx)
+        return start_idxs
+
+
+    def AP_stop_idxs(self, num_spikes, direction):
+        AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
+        AHP_idx = self.calc_or_read_from_cache('AHP_idxs') 
+        stop_idxs = []
+        for i in range(num_spikes):
+            if direction == 'rising':
+                stop_idx = AP_max_idx[i]
+            elif direction == 'falling':
+                if i < num_spikes-1:
+                    stop_idx = AHP_idx[i] 
+                else:
+                    stop_idx = self.offset_pnt
+            stop_idxs.append(stop_idx)
+        return stop_idxs
+
+    def calc_dVdt_pct_APamp(self, percent, direction):
+        num_spikes = self.calc_or_read_from_cache('num_spikes')
+        dVdt = self.calc_or_read_from_cache('dVdt_mV_per_ms')
         
         if percent.isdigit():
             amplitudes_at_percent = self.calc_val_pct_APamp(int(percent))
 
         dVdt_vals = []
+        
+        AP_start_idxs = self.AP_start_idxs(num_spikes, direction)
+        AP_stop_idxs = self.AP_stop_idxs(num_spikes, direction)
 
-        for i in range(num_spikes): 
-            if direction == 'rising':
-                if i == 0: 
-                    start_idx = self.onset_pnt
-                else:
-                    start_idx = AHP_idx[i-1]
-                stop_idx = AP_max_idx[i]
-
-            elif direction == 'falling':
-                start_idx = AP_max_idx[i]
-                if i < num_spikes-1:
-                    stop_idx = AHP_idx[i] 
-                else:
-                    stop_idx = self.offset_pnt
-            
+        for i in range(num_spikes):
+            start_idx = AP_start_idxs[i]
+            stop_idx = AP_stop_idxs[i]
             spike_data = self.sweep.data()[start_idx:stop_idx]
             dVdt_data = dVdt[start_idx:stop_idx]
 
@@ -332,7 +350,7 @@ class Response(object):
                 
             # append value as float to dVdt_vals
             dVdt_vals.append(dVdt_val)
-            
+                
         return np.array(dVdt_vals)
 
     def calc_dVdt_pct_APamp_last_spike(self, percent, direction,  num_spikes):
