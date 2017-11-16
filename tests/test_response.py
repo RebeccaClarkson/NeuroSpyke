@@ -144,7 +144,7 @@ def test_calc_val_pct_APamp():
     known_vals = np.array([-25.1947, -24.1427, -24.5680, -24.9613, -24.7053])
     assert np.allclose(calc_vals, known_vals)
 
-# AP width    
+# AP width
 def test_calc_AP_width():
     calc_vals = response_obj_5AP.calc_APwidth(percent=50)
     known_vals = [0.85, 1.4, 1.2, 1.1, 1.1]

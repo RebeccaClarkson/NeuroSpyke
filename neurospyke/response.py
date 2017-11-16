@@ -315,7 +315,6 @@ class Response(object):
             spike_widths.append(spike_width)
 
         return spike_widths
-            
 
     def AP_start_idxs(self, num_spikes, direction):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
