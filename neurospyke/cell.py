@@ -11,7 +11,7 @@ class Cell(object):
         self.file_path = file_path
         self.mat = scipy.io.loadmat(file_path)
         self.cell = self.mat['Cell']
-        self.descriptive_cell_properties = ['genetic_marker', 'ca_buffer', 'age', 'mouse_genotype'] 
+        self.descriptive_cell_properties = ['genetic_marker', 'ca_buffer', 'age', 'mouse_genotype', 'experimenter']
         self._cache = {}
         print(self.calc_cell_name())
 
@@ -83,6 +83,12 @@ class Cell(object):
             assert "no field of name age" in str(e)
             return np.nan
 
+    def calc_experimenter(self):
+        try:
+            return self.cell['Experimenter'][0,0][0]
+        except ValueError as e:
+            assert "no field of name Experimenter" in str(e)
+            return np.nan
 
     def time(self):
         return self.cell['time'][0,0].T

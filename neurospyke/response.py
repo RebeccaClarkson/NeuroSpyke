@@ -29,14 +29,6 @@ class Response(object):
                 other_list.append(criteria)
         return first_list + other_list
 
-        
-        #response_criteria_names = set(self.sweep.cell.query.response_criteria.keys())
-        #if 'sweep_time' in response_criteria_names:
-        #    response_criteria_names = response_criteria_names.difference(first_criteria)
-        #    return first_criteria + sorted(response_criteria_names)
-        #else:
-        #    return sorted(response_criteria_names)
-
     def data(self):
         return self.sweep.sweep_df['data']
 
@@ -277,8 +269,8 @@ class Response(object):
             stop_idx = int(AP_max_idx[i])
             #TODO assert that monotonically increasing?
             #TODO for classifier this should be -1, but may want to look at first point >15 mV/ms
+            #thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1
             thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1
-            #thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) 
              
             thresh_idxs.append(thresh_idx)
             thresh_vals.append(self.sweep.data()[thresh_idx])
@@ -317,7 +309,7 @@ class Response(object):
         amplitude_at_percent = thresh_vals + AP_amplitudes * percent/100
         return amplitude_at_percent
     
-    def calc_AP_width(self, percent):
+    def calc_AP_width_and_idxs(self, percent):
         num_spikes = self.calc_or_read_from_cache('num_spikes')
 
         rising_start_idxs = self.AP_start_idxs(num_spikes, 'rising')
@@ -326,7 +318,7 @@ class Response(object):
         falling_stop_idxs = self.AP_stop_idxs(num_spikes, 'falling')
 
         amplitudes_at_percent = self.calc_val_pct_APamp(int(percent))
-        spike_widths = []
+        spike_widths = []; idxs_rising = []; idxs_falling = []
         for i in range(num_spikes):
             rising_start_idx = int(rising_start_idxs[i])
             rising_stop_idx = int(rising_stop_idxs[i])
@@ -340,9 +332,16 @@ class Response(object):
             idx_rising = np.argmin(abs(rising_spike_data-amplitude_at_percent))
             idx_falling = np.argmin(abs(falling_spike_data-amplitude_at_percent))
             spike_width = (idx_falling-idx_rising) * self.calc_or_read_from_cache('ms_per_point')
+            idxs_rising.append(int(idx_rising))
+            idxs_falling.append(int(idx_falling))
             spike_widths.append(np.float(spike_width))
 
-        return np.array(spike_widths)
+
+        return idxs_rising, idxs_falling, np.array(spike_widths)
+    
+    def calc_AP_width(self, percent):
+        _, _, spike_widths = self.calc_AP_width_and_idxs(int(percent))
+        return spike_widths
 
     def AP_start_idxs(self, num_spikes, direction):
         AP_max_idx = self.calc_or_read_from_cache('APmax_idxs')
@@ -576,25 +575,31 @@ class Response(object):
 ##################################   PLOT    ##################################
 ###############################################################################
     
-    def plot_response(self, filepath=None, plotting_above=False):
+    def plot_response(self, filepath=None, plotting_above=False, plot_commands=False):
         #TODO: currently this creates a generator, so can't plot externally without a loop
+        fig = None; ax1 = None; ax2 = None
+        if plot_commands:
+            fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
-        fig, (ax1, ax2) = plt.subplots(2, sharex=True)
+            ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
+            ax2.set_ylim([-450, 250])
+            ax2.plot(self.time(), self.commands(), color='k')
 
+            ax1.spines['bottom'].set_visible(False)
+            ax1.axes.get_xaxis().set_visible(False)
+        else:
+            fig, ax1 = plt.subplots(1)
+
+        
         ax1.set_ylabel('mV'); 
-        ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
-        ax2.set_ylim([-450, 250])
-
         ax1.plot(self.time(), self.data(), color='k')
-        ax2.plot(self.time(), self.commands(), color='k')
-
         ax1.set_xlabel('time (s)')
         ax1.set_ylabel('mV')
-        ax1.spines['bottom'].set_visible(False)
-        ax1.axes.get_xaxis().set_visible(False)
         ax1.set_title(self.sweep.cell.calc_cell_name())
-
+            
         yield fig, (ax1, ax2)
+
+
 
         if filepath:
             plt.savefig(filepath, bbox_inches="tight")
@@ -643,3 +648,34 @@ class Response(object):
             plt.savefig(filepath)
         else:
             plt.show()
+
+
+    def plot_spiking_properties(self, threshold=False, AHP=False, AP_width__50=False, 
+            filepath=None, plot_commands=True):
+        threshold_vals = self.calc_or_read_from_cache('threshold_vals')
+        threshold_times = self.time().values[self.calc_or_read_from_cache('threshold_idxs')]
+        AHP_vals = self.calc_or_read_from_cache('AHP_vals')
+        AHP_times= self.time().values[self.calc_or_read_from_cache('AHP_idxs')]
+
+        for fig, (ax1, ax2) in self.plot_response(filepath=filepath, plot_commands=plot_commands):
+            if threshold:
+                ax1.scatter(threshold_times, threshold_vals, facecolors='r', edgecolors='r', s=20)
+            if AHP:
+                ax1.scatter(AHP_times, AHP_vals, facecolors='r', edgecolors='r', s=20)
+            if AP_width__50:
+                idxs_rising, idxs_falling, _ = self.calc_AP_width_and_idxs(50)
+                ax1.plot((self.time().values[idxs_rising], self.time().values[idxs_falling]), 
+                        (self.data().values[idxs_rising], self.data().values[idxs_falling]))
+                
+            ax1.set_xlim([threshold_times[0]-.01, threshold_times[0]+.01])
+                #ax1.set_xlim([self.onset_time-.01, self.offset_time+.1])
+            if plot_commands:
+                ax2.set_ylim([-50, 250])
+
+        ax1.set_title(
+                f"{self.sweep.cell.calc_cell_name()}, sweep {self.sweep.sweep_index()}, {self.amplitude} pA")
+        if filepath:
+            plt.savefig(filepath)
+        else:
+            plt.show()
+        plt.close()
