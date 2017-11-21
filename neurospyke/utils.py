@@ -22,7 +22,7 @@ def calc_pickle_cell_path(mat_cell_path):
     pickle_name = mat_name.replace('.mat', '.pickle')
     return cell_cache_dir + pickle_name 
 
-def load_cell(mat_cell_path):
+def load_cell(mat_cell_path, to_pickle):
     pickle_cell_path = calc_pickle_cell_path(mat_cell_path)
     try: 
         with open(pickle_cell_path, 'rb') as f:
@@ -30,13 +30,14 @@ def load_cell(mat_cell_path):
             return cell
     except:
         cell = Cell(mat_cell_path)
-        with open(pickle_cell_path, 'wb') as f:
-            pickle.dump(cell, f)
+        if to_pickle:
+            with open(pickle_cell_path, 'wb') as f:
+                pickle.dump(cell, f)
         return cell
 
-def load_cells(data_dir_path):
+def load_cells(data_dir_path, to_pickle=True):
     paths = glob.glob(data_dir_path)
-    cells = [load_cell(path) for path in paths]
+    cells = [load_cell(path, to_pickle) for path in paths]
     assert len(cells)>0, f"no cells were found in {data_dir_path}"
     return cells
 

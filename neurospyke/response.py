@@ -18,13 +18,24 @@ class Response(object):
         This method sets "sweep_time" as the first criteria to be checked, as
         this can speed processing time.
         """
-        first_criteria = ['sweep_time']
-        response_criteria_names = set(self.sweep.cell.query.response_criteria.keys())
-        if 'sweep_time' in response_criteria_names:
-            response_criteria_names = response_criteria_names.difference(first_criteria)
-            return first_criteria + sorted(response_criteria_names)
-        else:
-            return sorted(response_criteria_names)
+        first_criteria = 'sweep_time'
+        response_criteria = self.sweep.cell.query.response_criteria
+        first_list = []
+        other_list = []
+        for criteria in response_criteria:
+            if first_criteria in criteria:
+                first_list.append(criteria)
+            else:
+                other_list.append(criteria)
+        return first_list + other_list
+
+        
+        #response_criteria_names = set(self.sweep.cell.query.response_criteria.keys())
+        #if 'sweep_time' in response_criteria_names:
+        #    response_criteria_names = response_criteria_names.difference(first_criteria)
+        #    return first_criteria + sorted(response_criteria_names)
+        #else:
+        #    return sorted(response_criteria_names)
 
     def data(self):
         return self.sweep.sweep_df['data']
@@ -63,7 +74,7 @@ class Response(object):
         value = self.calc_or_read_from_cache(attr_name)
 
         if isinstance(condition, str):
-            condition_val_str = ''.join([s for s in condition if s.isdigit() or '.' in s])
+            condition_val_str = ''.join([s for s in condition if s.isdigit() or '.' in s or '-' in s])
             condition_val = float(condition_val_str) 
             if "<" in condition and ">" in condition:
                 raise Exception("TODO")   
@@ -77,14 +88,8 @@ class Response(object):
             return np.isclose(value, condition)
 
     def meets_criteria(self):
-        criteria_dict = self.sweep.cell.query.response_criteria
-        criteria_priority = self.criteria_priority()
-        criteria_list = []
-        for criteria in criteria_priority:
-            if criteria in criteria_dict.keys():
-                criteria_list.append((criteria, criteria_dict[criteria]))
         return all(self.meets_criterion(criterion)
-                for criterion in criteria_list)
+                for criterion in self.criteria_priority())
 
     def calc_properties(self, property_names):
         property_dict = {}
@@ -112,7 +117,6 @@ class Response(object):
         from the current injection (in ms)
         """
         points_per_ms = self.calc_or_read_from_cache('points_per_ms')
-        
         
         window_onset_pnt = int(self.onset_pnt - left_window*points_per_ms)
         window_offset_pnt = int(self.offset_pnt + right_window*points_per_ms)
@@ -152,6 +156,14 @@ class Response(object):
         return points_per_ms
 
 
+    def calc_baseline(self):
+        """
+        Calculates the voltage immediately before current injection.
+        """
+        baseline_start = self.onset_pnt - 10 * self.calc_or_read_from_cache('points_per_ms')
+        baseline_stop = self.onset_pnt
+        return np.mean(self.sweep.data()[baseline_start:baseline_stop])
+        
 ###############################################################################
 ##########################   SPIKE PROPERTIES    ##############################
 ###############################################################################
@@ -564,7 +576,9 @@ class Response(object):
 ##################################   PLOT    ##################################
 ###############################################################################
     
-    def plot_response(self, filepath=None):
+    def plot_response(self, filepath=None, plotting_above=False):
+        #TODO: currently this creates a generator, so can't plot externally without a loop
+
         fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
         ax1.set_ylabel('mV'); 
@@ -584,6 +598,9 @@ class Response(object):
 
         if filepath:
             plt.savefig(filepath, bbox_inches="tight")
+        else:
+            plt.show()
+
 
     def plot_reb_delta_t(self, filepath=None):
         """

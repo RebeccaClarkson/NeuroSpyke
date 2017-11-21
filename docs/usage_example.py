@@ -12,7 +12,7 @@ output_dir = 'docs/output/'
 example_cells = load_cells(cell_file_pattern)
 
 # Query 1 
-response_criteria = {'sweep_time': '<150', 'curr_duration':.3, 'num_spikes': 5}
+response_criteria = [('sweep_time', '<150'), ('curr_duration',.3), ('num_spikes', 5)]
 response_properties = [
     'num_spikes', 
     'doublet_index', 
@@ -31,7 +31,7 @@ df1 = query1.mean_df
 query1.cells[0].plot_sweeps(filepath=output_dir + '5AP_example.png')
 
 # Query 2
-response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
+response_criteria = [('curr_duration', .12), ('curr_amplitude', -400)]
 calculated_cell_properties = ['reb_delta_t', 'sag_fit_amplitude'] 
 query2 = Query.create_or_load_from_cache(
         example_cells, 
@@ -40,7 +40,7 @@ query2 = Query.create_or_load_from_cache(
         )
 df2 = query2.mean_df
 
-# Plot example reb_delta_t sweep  
+# Plot example reb_delta_t sweep
 query2.cells[0].plot_reb_delta_t(output_dir + 'example_reb_delta_t.png')
 
 

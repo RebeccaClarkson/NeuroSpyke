@@ -36,7 +36,6 @@ class Sweep(object):
         """
         Returns a list with n dictionaries  where n = number of current injections.
         """
-        curr_inj_waveform_list = []
         assert self.commands()[0] == 0
         
         # Removes nan from the commands. Perhaps this should be done at an
@@ -50,29 +49,30 @@ class Sweep(object):
         num_commands = int(len(non_zero))
         assert num_commands % 2 == 0 # should have even number of command steps 
         
+        curr_inj_waveform_list = []
         
         for i in range(0, num_commands, 2): # verify these are symmetrical square waves pulses
             this_val = delta_curr.iloc[non_zero].values[i] 
             next_val = delta_curr.iloc[non_zero].values[i+1]
 
-            assert this_val == -next_val
-            onset = non_zero[i]; offset = non_zero[i+1] 
+            if this_val == -next_val:
+                onset = non_zero[i]; offset = non_zero[i+1] 
 
-            onset_time = self.time().iloc[onset] 
-            offset_time = self.time().iloc[offset]
-            wave_amplitude = commands.iloc[onset]
-            sweep_index = self.sweep_index() 
+                onset_time = self.time().iloc[onset] 
+                offset_time = self.time().iloc[offset]
+                wave_amplitude = commands.iloc[onset]
+                sweep_index = self.sweep_index() 
     
-            # Now that have all the values, append to list 
-            tmp_dict = {
-                    'sweep_index':sweep_index,
-                    'onset_pnt':onset,
-                    'offset_pnt':offset,
-                    'onset_time':onset_time, 
-                    'offset_time':offset_time,
-                    'amplitude':wave_amplitude
-                    }
-            curr_inj_waveform_list.append(tmp_dict)
+                # Now that have all the values, append to list 
+                tmp_dict = {
+                        'sweep_index':sweep_index,
+                        'onset_pnt':onset,
+                        'offset_pnt':offset,
+                        'onset_time':onset_time, 
+                        'offset_time':offset_time,
+                        'amplitude':wave_amplitude
+                        }
+                curr_inj_waveform_list.append(tmp_dict)
     
         return curr_inj_waveform_list
 

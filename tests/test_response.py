@@ -11,7 +11,7 @@ data_dir_path = "tests/data/initial_examples/*.mat"
 cells = load_cells(data_dir_path)
 
 # run query, select cells to exampe
-query1 = Query(cells, response_criteria = {'curr_duration':.3, 'sweep_time': '>0'})
+query1 = Query(cells, response_criteria = [('curr_duration',.3), ('sweep_time', '>0')])
 query1.run()
 cell1 = query1.cells[0]; cell2 = query1.cells[1]
 
@@ -33,7 +33,7 @@ response_obj_2inj = Response(sweep_obj_2inj.current_inj_waveforms()[0], sweep_ob
 def test_criteria_priority():
     print(f"\n\n\t\tSTART TESTS")
     criteria = response_obj_5AP.criteria_priority()
-    assert criteria[0] == 'sweep_time'
+    assert 'sweep_time' in criteria[0]
 
 def test_meets_criterion():
     assert response_obj_5AP.meets_criterion(('curr_amplitude', '>0'))

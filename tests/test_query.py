@@ -4,7 +4,7 @@ from neurospyke.utils import load_cells
 import pandas as pd
 import numpy as np
 
-response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+response_criteria = [('curr_duration', .3), ('num_spikes', 5)]
 response_properties = ['num_spikes', 'APmax_vals', 'doublet_index', 
                         'dVdt_pct_APamp_last_spike__20__rising__5', 'dVdt_pct_APamp__20__rising',
                         'delta_thresh', 'delta_thresh_last_spike__5']
@@ -20,8 +20,7 @@ def test_run():
     print(f"\nResult of test_run: \n {df1}") 
 
 def test_conflicting_properties():
-
-    response_criteria = {'sweep_time': '<150', 'curr_duration': .3}
+    response_criteria = [('sweep_time', '<150'), ('curr_duration', .3)]
     response_property_spike_categories = [
         'doublet_index_by_num_spikes', 
         'delta_thresh_last_spike', 
@@ -39,14 +38,14 @@ def test_conflicting_properties():
 
 
 def test_calc_doublet_index_with_num_spikes():
-    response_criteria1 = {'curr_duration':.3}
+    response_criteria1 = [('curr_duration',.3)]
     response_properties1 = ['doublet_index_by_num_spikes']
     new_query = Query(cells, response_criteria=response_criteria1, 
         response_property_spike_categories=response_properties1)
     new_query.run()
     df1 = new_query.mean_df
-
-    response_criteria2 = {'curr_duration':.3, 'num_spikes': 5}
+    
+    response_criteria2 = [('curr_duration', .3), ('num_spikes', 5)]
     response_properties2 = ['doublet_index']
     new_query2 = Query(cells, response_criteria=response_criteria2, 
         response_properties=response_properties2)
@@ -63,7 +62,7 @@ def test_last_spike_query():
             df1['delta_thresh_last_spike__5'])
    
 def test_last_spike_query_with_no_num_spikes_criteria():
-    response_criteria = {'curr_duration':.3}
+    response_criteria = [('curr_duration', .3)]
     response_properties = []
     for num_spikes in range(3, 9):
         response_properties.append(f"delta_thresh_last_spike__{num_spikes}")
@@ -91,13 +90,13 @@ def test_load_cells():
 
 def test_create_or_load_from_cache():
     new_query = Query.create_or_load_from_cache(cells, 
-            response_criteria={'curr_duration': .3, 'num_spikes': 5}, 
+            response_criteria = [('curr_duration', .3), ('num_spikes', 5)],
             response_properties=['num_spikes', 'delta_thresh'])
     print(f"\n New query created, results: \n {new_query.mean_df}")
     print(f"\n Next will try to create again, see if loads from cache")
 
     new_query2 = Query.create_or_load_from_cache(cells, 
-            response_criteria={'curr_duration': .3, 'num_spikes': 5},
+            response_criteria = [('curr_duration', .3), ('num_spikes', 5)],
             response_properties=['num_spikes', 'delta_thresh'])
 
     print(f"\n new_query2: \n {new_query2.mean_df}")
@@ -114,7 +113,7 @@ def test_query_with_descriptive_cell_properties():
     assert {'010417-1', '041015A'}.issubset(df.index)
 
 def test_query_with_numeric_response_criteria_and_properties():
-    response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+    response_criteria = [('curr_duration', .3), ('num_spikes', 5)]
     response_properties = ['APmax_vals', 'doublet_index']
     new_query = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
@@ -128,7 +127,7 @@ def test_query_with_numeric_response_criteria_and_properties():
 
 
 def test_query_with_no_responses():
-    response_criteria = {'curr_duration': .3, 'num_spikes': 4}
+    response_criteria = [('curr_duration', .3), ('num_spikes', 5)]
     response_properties = ['num_spikes', 'APmax_vals', 'doublet_index']
     query2 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
@@ -136,14 +135,14 @@ def test_query_with_no_responses():
     print(f"\n\ndf with cell with no responses for criteria: \n{df2}")
 
 def test_combining_queries():
-    response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+    response_criteria = [('curr_duration', .3), ('num_spikes', 5)]
     response_properties = ['num_spikes','APmax_vals', 'doublet_index']
     query1 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
     df1 = query1.run()
     #print(f"\n\nQuery 1 is: \n{df1}")
     
-    response_criteria = {'curr_duration': .3, 'num_spikes': 6}
+    response_criteria = [('curr_duration', .3), ('num_spikes', 6)]
     response_properties = ['num_spikes', 'APmax_vals', 'doublet_index']
     query2 = Query(cells, response_criteria=response_criteria, 
             response_properties=response_properties)
@@ -156,8 +155,6 @@ def test_combining_queries():
     combined_df = combined_df[reordered]
     print(f"\n\nCombined query results:\n {combined_df}")
     
-
-
 def test_describe():
     print(ex_query1.describe())
 

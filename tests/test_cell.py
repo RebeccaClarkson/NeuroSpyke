@@ -70,7 +70,7 @@ def test_run():
 def test_calc_mean_response_properties_df():
     data_dir_path = "tests/data/initial_examples/*.mat"
     cells = load_cells(data_dir_path)
-    response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+    response_criteria = [('curr_duration', .3), ('num_spikes', 5)]
     response_properties = ['delta_thresh']
     query = Query(cells, response_criteria=response_criteria, response_properties=response_properties)
     query.run()
@@ -85,7 +85,7 @@ def test_calc_mean_response_properties_df():
 def test_response_properties_df():
     data_dir_path = "tests/data/initial_examples/*.mat"
     cells = load_cells(data_dir_path)
-    response_criteria = {'curr_duration': .3, 'num_spikes': 5}
+    response_criteria = [('curr_duration', .3), ('num_spikes', 5)]
     response_properties = ['APmax_vals']
     query = Query(cells, response_criteria=response_criteria, response_properties=response_properties)
     query.run()
@@ -101,7 +101,7 @@ def test_response_properties_df():
 ####################################################################################################
 
 data_dir_path = "tests/data/more_cells/*.mat"
-response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
+response_criteria = [('curr_duration', .12), ('curr_amplitude', -400)]
 cell_properties = ['reb_delta_t']
 cells = load_cells(data_dir_path)
 query = Query(cells, response_criteria=response_criteria, cell_properties=cell_properties)
@@ -122,7 +122,7 @@ def test_calc_reb_delta_t():
 
 def test_average_response():
     data_dir_path = "tests/data/more_cells/*.mat"
-    response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
+    response_criteria = [('curr_duration', .12), ('curr_amplitude', -400)]
     cell_properties = ['reb_delta_t']
     cells = load_cells(data_dir_path)
     query = Query(cells, response_criteria=response_criteria, cell_properties=cell_properties)

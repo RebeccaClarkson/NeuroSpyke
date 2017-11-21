@@ -17,10 +17,8 @@ class Query(object):
         self.response_properties = response_properties or []
         self.response_property_spike_categories = response_property_spike_categories or []
         self.cell_criteria = cell_criteria or {'rheobase': False}
-        
         if 'rheobase' not in list(self.cell_criteria.keys()): 
             self.cell_criteria['rheobase'] = False
-
 
         self.cell_properties = cell_properties or []
 
@@ -68,12 +66,12 @@ class Query(object):
         tmp_query = cls(cells, **kwargs)
         path_exists =  os.path.isfile(tmp_query.query_cache_filename())
         if overwrite or not path_exists:
-            print(f"\nMaking new query")
+            print(f"Making new query")
             tmp_query.run()
             tmp_query.save_query()
             return tmp_query
         else: 
-            print(f"\nLoading query from cache")
+            print(f"Loading query from cache")
             query = cls.load_query(tmp_query.query_cache_filename())
             query.cells = cells
 
@@ -81,7 +79,6 @@ class Query(object):
                 cell.query = query
                 cell.analyzed_sweep_ids = query.analyzed_sweeps_dict[cell.calc_cell_name()]
             return query
-
 
     def run(self): 
         """
@@ -131,7 +128,7 @@ class Query(object):
         Returns a string that has all parameters that can be used to create a query.
         """
         cell_criteria = sorted(list(self.cell_criteria.items()))
-        response_criteria = sorted(list(self.response_criteria.items()))
+        response_criteria = sorted(self.response_criteria)
         cell_properties = sorted(self.cell_properties)
         response_properties = sorted(self.response_properties)
         response_property_spike_categories = sorted(self.response_property_spike_categories)

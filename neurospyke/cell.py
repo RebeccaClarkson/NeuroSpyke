@@ -11,8 +11,9 @@ class Cell(object):
         self.file_path = file_path
         self.mat = scipy.io.loadmat(file_path)
         self.cell = self.mat['Cell']
-        self.descriptive_cell_properties = ['genetic_marker', 'ca_buffer'] 
+        self.descriptive_cell_properties = ['genetic_marker', 'ca_buffer', 'age', 'mouse_genotype'] 
         self._cache = {}
+        print(self.calc_cell_name())
 
     def calc_or_read_from_cache(self, attr_name):
         """
@@ -65,11 +66,23 @@ class Cell(object):
             assert "no field of name genetic_marker" in str(e)
             return np.nan
 
+    def calc_mouse_genotype(self):
+        try:
+            return self.cell['mouse_genotype'][0,0][0]
+        except ValueError as e:
+            assert "no field of name mouse_genotype" in str(e)
+            return np.nan
+
     def calc_ca_buffer(self):
         return self.cell['CaBuffer'][0,0][0]
 
-    def age(self):
-        return self.cell['age'][0,0][0]
+    def calc_age(self):
+        try:
+            return self.cell['age'][0,0][0]
+        except ValueError as e:
+            assert "no field of name age" in str(e)
+            return np.nan
+
 
     def time(self):
         return self.cell['time'][0,0].T
@@ -153,7 +166,8 @@ class Cell(object):
                 threshold_timing_col_bool = len([
                         col for col in response_df.columns if 'threshold_timing' in col]) > 0
                 assert threshold_timing_col_bool, "Threshold timing is required to determine rheobase"
-                assert self.query.response_criteria[
+                response_criteria_dict = dict(self.query.response_criteria)
+                assert response_criteria_dict[
                          'num_spikes'] == 1, "Rheobase only defined for num_spikes = 1"
 
                 min_thresh_timing_idx = response_df['threshold_timing0'].argmin()
