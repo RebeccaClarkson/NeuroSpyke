@@ -169,6 +169,9 @@ def test_calc_dVdt_rising_pct_APamplitude():
     calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent='max', direction='rising')
     known_vals = [433.6, 345.73, 372.0667, 379.8667, 377.9333]
     assert np.allclose(calc_vals, known_vals)
+    calc_vals = response_obj_5AP.calc_dVdt_pct_APamp(percent='max', direction='falling')
+    known_vals = [-81.0667, -52.7333, -56.6667, -59.60000, -59.5333]
+    assert np.allclose(calc_vals, known_vals)
 
 def test_calc_dVdt_pct_APamp_last_spike():
     calc_val = response_obj_5AP.calc_dVdt_pct_APamp_last_spike(
@@ -195,4 +198,3 @@ def test_calc_ISI():
     assert len(ISIs) == 3
     ISIs = response_obj_5AP.calc_ISIs()
     assert len(ISIs) == 4
-    print(f"\n\n\t\tSAG/REBOUND PROPERTIES")

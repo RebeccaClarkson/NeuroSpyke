@@ -109,12 +109,12 @@ query.run()
 reb_ex_cell = [query.cells[0]][0]
 
 def test_calc_reb_delta_t():
-    reb_ex_cell.calc_reb_delta_t()
+    calc_val = reb_ex_cell.calc_reb_delta_t()
+    known_val = 37.2
+    assert np.isclose(calc_val, known_val)
 
-#def test_calc_max_rebound_amp_and_idx():
-#    max_val = response_obj_rebound.calc_max_rebound_amp()
-#    max_time = response_obj_rebound.calc_max_rebound_time()
-#    print(max_time, max_val)
+def test_calc_max_rebound_time():
+    pass
 
 ####################################################################################################
 ###############################   GET AVERAGE RESPONSE SWEEP   #####################################

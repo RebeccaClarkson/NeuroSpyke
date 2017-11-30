@@ -41,9 +41,7 @@ query2 = Query.create_or_load_from_cache(
 df2 = query2.mean_df
 
 # Plot example reb_delta_t sweep
-query2.cells[0].plot_reb_delta_t(output_dir + 'example_reb_delta_t.png')
-
-
+query2.cells[0].plot_reb_delta_t(filepath=output_dir + 'example_reb_delta_t.png')
 
 """ Combine resulting dataframes """
 

@@ -71,12 +71,18 @@ class Response(object):
             if "<" in condition and ">" in condition:
                 raise Exception("TODO")   
             elif "<" in condition:
+                #print(f"Sweep # {self.sweep.sweep_index()}")
+                #print(value, condition, value < condition_val)
                 return value < condition_val
             elif ">" in condition:
+                #print(f"Sweep # {self.sweep.sweep_index()}")
+                #print(value, condition, value>condition_val)
                 return value > condition_val
             else:
                 raise Exception(f"{condition} is invalid condition")
         else:
+            #print(f"Sweep # {self.sweep.sweep_index()}")
+            #print(value, condition, np.isclose(value, condition))
             return np.isclose(value, condition)
 
     def meets_criteria(self):
@@ -102,7 +108,7 @@ class Response(object):
         results_dict = self.calc_properties(response_properties)
         return pd.DataFrame([results_dict], index=[self.sweep.sweep_index()])
 
-    def window(self, left_window=50, right_window=50):
+    def window(self, left_window=100, right_window=100):
         """
         Returns a dataframe of the sweep_df format with only the specified
         response window.  Left and right are how far the window should extend
@@ -110,8 +116,8 @@ class Response(object):
         """
         points_per_ms = self.calc_or_read_from_cache('points_per_ms')
         
-        window_onset_pnt = int(self.onset_pnt - left_window*points_per_ms)
-        window_offset_pnt = int(self.offset_pnt + right_window*points_per_ms)
+        window_onset_pnt = int(self.onset_pnt - int(left_window)*points_per_ms)
+        window_offset_pnt = int(self.offset_pnt + int(right_window)*points_per_ms)
 
         if window_onset_pnt < 0:
             raise Exception("Left window too big")
@@ -130,6 +136,9 @@ class Response(object):
 
     def calc_sweep_time(self):
         return self.sweep.sweep_df.sweep_time[0]
+
+    def calc_sweep_index(self):
+        return self.sweep.sweep_index()
 
     def calc_curr_duration(self):
         return self.offset_time - self.onset_time
@@ -166,15 +175,16 @@ class Response(object):
         above_thresh = np.where(self.sweep.data()[1:] > thresh)           
         below_thresh = np.where(self.sweep.data()[0:-1] <= thresh)
         spike_points = np.intersect1d(above_thresh, below_thresh)
-
-        all_spike_points_during_current_injection = all(spike_point 
-                in range(self.onset_pnt, self.offset_pnt) 
-                for spike_point in spike_points)
-        if all_spike_points_during_current_injection: 
-            return spike_points
-        else:
-            # if there are spikes outside of current injection, don't analyze
-            return []
+        idx = np.where((spike_points > self.onset_pnt) & (spike_points < self.offset_pnt))
+        return spike_points[idx] 
+        #all_spike_points_during_current_injection = all(spike_point 
+        #        in range(self.onset_pnt, self.offset_pnt) 
+        #        for spike_point in spike_points)
+        #if all_spike_points_during_current_injection: 
+        #    return spike_points
+        #else:
+        #    # if there are spikes outside of current injection, don't analyze
+        #    return []
      
     def calc_num_spikes(self):
         spike_points = self.calc_or_read_from_cache('spike_points')
@@ -267,9 +277,8 @@ class Response(object):
             else: 
                 start_idx = int(AHP_idx[i-1])
             stop_idx = int(AP_max_idx[i])
+
             #TODO assert that monotonically increasing?
-            #TODO for classifier this should be -1, but may want to look at first point >15 mV/ms
-            #thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1
             thresh_idx = start_idx + np.searchsorted(dVdt[start_idx:stop_idx], 15) - 1
              
             thresh_idxs.append(thresh_idx)
@@ -311,7 +320,6 @@ class Response(object):
     
     def calc_AP_width_and_idxs(self, percent):
         num_spikes = self.calc_or_read_from_cache('num_spikes')
-
         rising_start_idxs = self.AP_start_idxs(num_spikes, 'rising')
         rising_stop_idxs = self.AP_stop_idxs(num_spikes, 'rising')
         falling_start_idxs = self.AP_start_idxs(num_spikes, 'falling')
@@ -396,7 +404,9 @@ class Response(object):
                 idx = np.argmin(abs(spike_data-amplitude_at_percent))
                 dVdt_val = np.float(dVdt[idx])
             elif percent == 'max':
-                dVdt_val = np.float(np.max(dVdt_data))
+                dVdt_abs = np.abs(dVdt_data)
+                max_idx = np.argmax(dVdt_abs)
+                dVdt_val = np.float(dVdt_data[max_idx])
                 
             # append value as float to dVdt_vals
             dVdt_vals.append(dVdt_val)
@@ -519,9 +529,9 @@ class Response(object):
 
         return sag_amplitude 
 
-    def calc_max_rebound_amp_and_time(self, within=100):
+    def calc_max_rebound_val_and_time(self):
         """
-        Returns the max rebound amplitude and time after  current offset within the response window
+        Returns the max rebound amplitude and time after current offset within the response window
         """
         reb_data = self.data()[self.offset_pnt:]
         max_idx = np.argmax(reb_data)
@@ -530,15 +540,14 @@ class Response(object):
         max_pnt_offset = max_idx - self.offset_pnt
         max_rebound_location_ms = max_pnt_offset * self.calc_or_read_from_cache('ms_per_point')
 
-
         return max_rebound_location_ms, max_val
 
-    def calc_max_rebound_amp(self):
-        _, max_val = self.calc_or_read_from_cache('max_rebound_amp_and_time')
+    def calc_max_rebound_val(self):
+        _, max_val = self.calc_or_read_from_cache('max_rebound_val_and_time')
         return max_val
 
     def calc_max_rebound_time(self):
-        max_rebound_location_ms, _ = self.calc_or_read_from_cache('max_rebound_amp_and_time')
+        max_rebound_location_ms, _ = self.calc_or_read_from_cache('max_rebound_val_and_time')
         return max_rebound_location_ms
 
     def find_nearest_pnt_series(self, pd_series, value):
@@ -551,10 +560,10 @@ class Response(object):
         Returns time to get from 20% to 80% of voltage change from steady state
         to maximum repolarization within response window. 
         """
-        max_rebound_amp = self.calc_or_read_from_cache('max_rebound_amp')
+        max_rebound_val = self.calc_or_read_from_cache('max_rebound_val')
         steady_state_avg_amp = self.calc_or_read_from_cache('sag_steady_state_avg_amp')
 
-        rebound_amp_change = max_rebound_amp - steady_state_avg_amp
+        rebound_amp_change = max_rebound_val - steady_state_avg_amp
         twenty_percent_rebound_voltage = steady_state_avg_amp + rebound_amp_change * 0.20
         eighty_percent_rebound_voltage = steady_state_avg_amp + rebound_amp_change * 0.80
 
@@ -575,42 +584,59 @@ class Response(object):
 ##################################   PLOT    ##################################
 ###############################################################################
     
-    def plot_response(self, filepath=None, plotting_above=False, plot_commands=False):
+    def plot_response(self, filepath=None, plotting_above=False, plot_commands=True, xscale='s'):
         #TODO: currently this creates a generator, so can't plot externally without a loop
         fig = None; ax1 = None; ax2 = None
+        if xscale == 'ms':
+            time = self.time() * 1000
+        elif xscale == 's':
+            time = self.time()
         if plot_commands:
             fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
-            ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
+            ax2.set_xlabel(f'time ({xscale})'); ax2.set_ylabel('pA')
             ax2.set_ylim([-450, 250])
-            ax2.plot(self.time(), self.commands(), color='k')
+            ax2.plot(time, self.commands(), color='k')
 
             ax1.spines['bottom'].set_visible(False)
             ax1.axes.get_xaxis().set_visible(False)
         else:
             fig, ax1 = plt.subplots(1)
 
-        
         ax1.set_ylabel('mV'); 
-        ax1.plot(self.time(), self.data(), color='k')
-        ax1.set_xlabel('time (s)')
+        ax1.plot(time, self.data(), color='k')
+
+        ax1.set_xlabel(f'time ({xscale})')
         ax1.set_ylabel('mV')
         ax1.set_title(self.sweep.cell.calc_cell_name())
             
         yield fig, (ax1, ax2)
 
-
-
         if filepath:
             plt.savefig(filepath, bbox_inches="tight")
+
+    def plot_reb_time(self, filepath=None):
+        """ Add line showing timing of peak rebound """
+        rebound_time_sec = self.calc_or_read_from_cache('max_rebound_time')/1000
+
+        for fig, (ax1, ax2) in self.plot_response():
+            ax1.axvline(x=self.offset_time+rebound_time_sec)
+            ax1.axvline(x=self.offset_time + .09,color='r')
+
+            if rebound_time_sec < .09:
+                ax1.set_title(ax1.get_title() + ': Type 2')
+            else:
+                ax1.set_title(ax1.get_title() + ': Type 1/3')
+    
+        if filepath:
+            plt.savefig(filepath)
         else:
             plt.show()
-
 
     def plot_reb_delta_t(self, filepath=None):
         """
         Adds annotations for reb_delta_t analysis to a figure object created
-        with self.plot_respons()
+        with self.plot_response()
         """
         self.calc_or_read_from_cache('reb_delta_t')
 
@@ -651,29 +677,46 @@ class Response(object):
 
 
     def plot_spiking_properties(self, threshold=False, AHP=False, AP_width__50=False, 
-            filepath=None, plot_commands=True):
-        threshold_vals = self.calc_or_read_from_cache('threshold_vals')
-        threshold_times = self.time().values[self.calc_or_read_from_cache('threshold_idxs')]
-        AHP_vals = self.calc_or_read_from_cache('AHP_vals')
-        AHP_times= self.time().values[self.calc_or_read_from_cache('AHP_idxs')]
+            filepath=None, plot_commands=True, xscale='ms'):
 
-        for fig, (ax1, ax2) in self.plot_response(filepath=filepath, plot_commands=plot_commands):
+        if xscale == 'ms':
+            scalar = 1000
+        if xscale == 's':
+            scalar = 1
+        time = self.time() * scalar
+
+
+        for fig, (ax1, ax2) in self.plot_response(
+                filepath=filepath, 
+                plot_commands=plot_commands,
+                xscale=xscale):
+
             if threshold:
-                ax1.scatter(threshold_times, threshold_vals, facecolors='r', edgecolors='r', s=20)
+                threshold_vals = self.calc_or_read_from_cache('threshold_vals')
+                threshold_times = time.values[self.calc_or_read_from_cache('threshold_idxs')]
+                ax1.scatter(threshold_times, threshold_vals, facecolors='r', edgecolors='r', s=30)
             if AHP:
+                AHP_vals = self.calc_or_read_from_cache('AHP_vals')
+                AHP_times= time.values[self.calc_or_read_from_cache('AHP_idxs')]
                 ax1.scatter(AHP_times, AHP_vals, facecolors='r', edgecolors='r', s=20)
             if AP_width__50:
                 idxs_rising, idxs_falling, _ = self.calc_AP_width_and_idxs(50)
-                ax1.plot((self.time().values[idxs_rising], self.time().values[idxs_falling]), 
+                ax1.plot((time.values[idxs_rising], time.values[idxs_falling]), 
                         (self.data().values[idxs_rising], self.data().values[idxs_falling]))
-                
-            ax1.set_xlim([threshold_times[0]-.01, threshold_times[0]+.01])
+
+            ax1.set_xlim([threshold_times[0]-.005*scalar, threshold_times[-1]+.01*scalar])
+            ax1.set_ylim([-60, 60])
                 #ax1.set_xlim([self.onset_time-.01, self.offset_time+.1])
             if plot_commands:
                 ax2.set_ylim([-50, 250])
-
+        cell_name = self.sweep.cell.calc_cell_name()
+        mouse_genotype = self.sweep.cell.calc_mouse_genotype()
+        age = self.sweep.cell.calc_age()
+        sweep_index = self.sweep.sweep_index()
         ax1.set_title(
-                f"{self.sweep.cell.calc_cell_name()}, sweep {self.sweep.sweep_index()}, {self.amplitude} pA")
+                f"{cell_name}, sweep {sweep_index}, {self.amplitude} pA" +
+                f"\nP{int(age)}, {mouse_genotype}"
+                )
         if filepath:
             plt.savefig(filepath)
         else:

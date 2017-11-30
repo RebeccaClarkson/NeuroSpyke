@@ -1,8 +1,8 @@
 from neurospyke.plot_df_utils import rgb_colors
-#from neurospyke.query import Query
-#from neurospyke.utils import concat_dfs_by_index 
-#from neurospyke.utils import load_cells 
-#from neurospyke.utils import reorder_df 
+from neurospyke.query import Query
+from neurospyke.utils import concat_dfs_by_index 
+from neurospyke.utils import load_cells 
+from neurospyke.utils import reorder_df 
 from scipy.stats import norm
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 import matplotlib.pyplot as plt
@@ -13,33 +13,33 @@ cell_file_pattern = 'docs/example_cells/*.mat'
 output_dir = 'docs/output/' 
 
 """ Load example cells and run queries """
-#example_cells = load_cells(cell_file_pattern)
-#
-#""" Set response criteria and properties, run Query """
-#response_criteria = {'sweep_time': '<150', 'curr_duration': .3, 'curr_amplitude': '>0'}
-#response_property_spike_categories = [
-#    'log_doublet_index_by_num_spikes', 
-#    'delta_thresh_last_spike', 
-#    'dVdt_pct_APamp_last_spike__20__rising'
-#    ]
-#
-#spike_query = Query.create_or_load_from_cache(
-#        example_cells,
-#        response_criteria=response_criteria,
-#        response_property_spike_categories=response_property_spike_categories)
-#
-#response_criteria = {'curr_duration': .12, 'curr_amplitude': -400}
-#calculated_cell_properties = ['reb_delta_t', 'sag_fit_amplitude'] 
-#sag_reb_query = Query.create_or_load_from_cache(
-#        example_cells, 
-#        response_criteria=response_criteria, 
-#        cell_properties=calculated_cell_properties,
-#        )
-#
-#""" Combine resulting dataframes """
-#combined_df = concat_dfs_by_index(spike_query.mean_df, sag_reb_query.mean_df)
-#example_cells_df = reorder_df(combined_df, ['genetic_marker', 'ca_buffer'])
-#example_cells_df.to_pickle(output_dir + 'example_cells_df.pkl')
+example_cells = load_cells(cell_file_pattern)
+
+""" Set response criteria and properties, run Query """
+response_criteria = [('sweep_time', '<150'), ('curr_duration', .3), ('curr_amplitude', '>0')]
+response_property_spike_categories = [
+    'log_doublet_index_by_num_spikes', 
+    'delta_thresh_last_spike', 
+    'dVdt_pct_APamp_last_spike__20__rising'
+    ]
+
+spike_query = Query.create_or_load_from_cache(
+        example_cells,
+        response_criteria=response_criteria,
+        response_property_spike_categories=response_property_spike_categories)
+
+response_criteria = [('curr_duration', .12), ('curr_amplitude', -400)]
+calculated_cell_properties = ['reb_delta_t', 'sag_fit_amplitude'] 
+sag_reb_query = Query.create_or_load_from_cache(
+        example_cells, 
+        response_criteria=response_criteria, 
+        cell_properties=calculated_cell_properties,
+        )
+
+""" Combine resulting dataframes """
+combined_df = concat_dfs_by_index(spike_query.mean_df, sag_reb_query.mean_df)
+example_cells_df = reorder_df(combined_df, ['genetic_marker', 'ca_buffer'])
+example_cells_df.to_pickle(output_dir + 'example_cells_df.pkl')
 
 example_cells_df = pd.read_pickle(output_dir + 'example_cells_df.pkl')
 example_cell_to_classify = example_cells_df.iloc[2]
