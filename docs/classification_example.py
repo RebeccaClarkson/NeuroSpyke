@@ -6,6 +6,7 @@ from neurospyke.utils import reorder_df
 from scipy.stats import norm
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
 
@@ -102,21 +103,19 @@ for num_spikes in range(3, 9):
     shape_D1 = np.shape(score_D1)
     shape_D3 = np.shape(score_D3)
     
-    ax.scatter(score_D1, np.tile(.1, shape_D1), edgecolors='k', color='w')
+    ax.scatter(score_D1, np.tile(.1, shape_D1), edgecolors='k', color='None', zorder=5)
     x_vals = np.arange(-10, 10, .01) 
     plt.plot(x_vals, 
             norm.pdf(x_vals, np.nanmean(score_D1), np.nanstd(score_D1)), 
             '--', color = 'k')
 
-    ax.scatter(score_D3, np.tile(.3, shape_D3), edgecolors=rgb_colors['dodgerblue'], color='w')
+    ax.scatter(score_D3, np.tile(.3, shape_D3), edgecolors=rgb_colors['dodgerblue'], color='None', zorder=6)
     plt.plot(x_vals, 
             norm.pdf(x_vals, np.nanmean(score_D3), np.nanstd(score_D3)), 
             '--', color=rgb_colors['dodgerblue'])
 
     """ End plotting all cells """
 
-
-    
     # Get linear discriminant fit 
     lda = LDA()
     lda.coef_ = lda_coeff
@@ -130,9 +129,6 @@ for num_spikes in range(3, 9):
     else:
         discriminant_score = np.nan 
 
-    # plot the decision boundary
-    plt.axvline(x=0,color= 'r') 
-
     # plot the score of the current cell
     ax.scatter(discriminant_score,  .2, edgecolors='r', color='w')
     current_LDA_dist_values = LDA_dist_values[(LDA_dist_values.num_spikes == num_spikes) & 
@@ -142,10 +138,29 @@ for num_spikes in range(3, 9):
     D1_dist_std = current_LDA_dist_values[current_LDA_dist_values.genetic_marker == 'D1']['std']
     D3_dist_std = current_LDA_dist_values[current_LDA_dist_values.genetic_marker == 'D3']['std']
 
+    # plot the decision boundary and exclusion zone
+    left_exclusion_border = D1_dist_mean.values - 1.64 * D1_dist_std.values
+    right_exclusion_border = D3_dist_mean.values + 1.64 * D3_dist_std.values
+    
+    if left_exclusion_border > 0:
+        left_exclusion_border = 0
+
+    if right_exclusion_border < 0:
+        right_exclusion_border = 0
+
+    ax.axvline(x=0,color= 'r') 
+    
+    patch = ax.add_patch(patches.Rectangle(
+        (left_exclusion_border, 0),
+        abs(left_exclusion_border - right_exclusion_border),
+        100)) 
+    patch.set_color('grey')
+    patch.set_zorder(0)
+
     # plot the score distributions that established the published classifier
     x_vals = np.arange(-10, 10, .01) 
-    plt.plot(x_vals, norm.pdf(x_vals, D1_dist_mean, D1_dist_std),color = 'k')
-    plt.plot(x_vals, norm.pdf(x_vals, D3_dist_mean, D3_dist_std), color=rgb_colors['dodgerblue'])
+    ax.plot(x_vals, norm.pdf(x_vals, D1_dist_mean, D1_dist_std),color='k')
+    ax.plot(x_vals, norm.pdf(x_vals, D3_dist_mean, D3_dist_std), color=rgb_colors['dodgerblue'])
 
     ax.set_xlabel('score')
     ax.set_xlim([-10, 8]); ax.set_ylim([0, .5])
