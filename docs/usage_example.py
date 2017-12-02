@@ -1,6 +1,8 @@
+from neurospyke.classify_cell import classify_cell
 from neurospyke.plot_df_utils import D1_D3_scatter_subplots
 from neurospyke.query import Query
 from neurospyke.utils import concat_dfs_by_index 
+from neurospyke.utils import load_cell
 from neurospyke.utils import load_cells 
 from neurospyke.utils import reorder_df 
 from tabulate import tabulate
@@ -64,4 +66,9 @@ comparisons = [
         ('doublet_index', 'dVdt_pct_APamp__20__rising4'),
         ('delta_thresh4', 'dVdt_pct_APamp__20__rising4'), 
         ]
-D1_D3_scatter_subplots(example_cells_df, comparisons, output_path=output_dir + 'D1_vs_D3_ephys.png')
+D1_D3_scatter_subplots(example_cells_df, comparisons, 'EGTA',  output_path=output_dir + 'D1_vs_D3_ephys.png')
+
+
+""" Classify a cell according to published classifier """
+cell_to_classify = load_cell('docs/example_cells/082615-8.mat')
+classify_cell(cell_to_classify, filepath=output_dir + 'example_classified_cell.png')

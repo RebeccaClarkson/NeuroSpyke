@@ -1,7 +1,7 @@
 from inflection import humanize
 import matplotlib.pyplot as plt
 
-def D1_D3_scatter_subplots(df, xy_pairs, output_path=None):
+def D1_D3_scatter_subplots(df, xy_pairs, ca_buffer,  output_path=None):
     number_of_subplots = len(xy_pairs)
     columns = 2
     rows = number_of_subplots%columns + number_of_subplots//columns
@@ -11,7 +11,7 @@ def D1_D3_scatter_subplots(df, xy_pairs, output_path=None):
     i = 0
     for pair in xy_pairs:
         fig.add_subplot(rows, columns, position[i])
-        D1_D3_scatter_plot(df, pair[0], pair[1], new_figure=0)
+        D1_D3_scatter_plot(df, pair[0], pair[1], ca_buffer,  new_figure=0)
         if i == 1:
             plt.legend()
         i += 1
@@ -21,13 +21,13 @@ def D1_D3_scatter_subplots(df, xy_pairs, output_path=None):
         plt.show()
 
 
-def D1_D3_scatter_plot(df, x_property, y_property, output_dir=None, new_figure=1):
+def D1_D3_scatter_plot(df, x_property, y_property, ca_buffer,  output_dir=None, new_figure=1):
     """ 
     Scatter plot of y_property vs. x_property with cells grouped by whether
     genetic marker is D1 or D3
     """
-    D1_cells = df[df['genetic_marker'] == 'D1']
-    D3_cells = df[df['genetic_marker'] == 'D3']
+    D1_cells = df[(df['genetic_marker'] == 'D1') & (df['ca_buffer'] == ca_buffer)]
+    D3_cells = df[(df['genetic_marker'] == 'D3') & (df['ca_buffer'] == ca_buffer)]
 
     if new_figure:  
         plt.figure()

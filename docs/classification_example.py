@@ -110,7 +110,7 @@ for num_spikes in range(3, 9):
             '--', color = 'k')
 
     ax.scatter(score_D3, np.tile(.3, shape_D3), edgecolors=rgb_colors['dodgerblue'], color='None', zorder=6)
-    plt.plot(x_vals, 
+    ax.plot(x_vals, 
             norm.pdf(x_vals, np.nanmean(score_D3), np.nanstd(score_D3)), 
             '--', color=rgb_colors['dodgerblue'])
 
