@@ -109,9 +109,8 @@ def classify_cell(cell_to_classify, plot=True, filepath=None):
                 discriminant_score = np.nan 
     
             # plot the score of the current cell
-            ax.scatter(discriminant_score,  .2, edgecolors='r', color='None', zorder=6)
+            ax.scatter(discriminant_score,  .2, edgecolors='r', s=40, color='None', zorder=6)
     
-            
             if discriminant_score < left_exclusion_border:
                 cell_type.append(3)
                 cell_ID = "Type 3"

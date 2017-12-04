@@ -71,4 +71,5 @@ D1_D3_scatter_subplots(example_cells_df, comparisons, 'EGTA',  output_path=outpu
 
 """ Classify a cell according to published classifier """
 cell_to_classify = load_cell('docs/example_cells/082615-8.mat')
-classify_cell(cell_to_classify, filepath=output_dir + 'example_classified_cell.png')
+cell_type = classify_cell(cell_to_classify, filepath=output_dir + 'example_classified_cell.png')
+print(f"Cell {cell_to_classify.calc_cell_name()} is Type {cell_type}")
