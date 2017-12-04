@@ -141,7 +141,7 @@ def classify_cell(cell_to_classify, plot=True, filepath=None):
         cell_type_final = 3
         cell_ID_final = "Type 3"
 
-    plt.suptitle(f"{cell_to_classify.calc_cell_name()}: {cell_ID_final}, {ca_buffer}", fontsize=14)
+    plt.suptitle(f"{cell_to_classify.calc_cell_name()}: {cell_ID_final}, {ca_buffer}", fontsize=15)
     fig.set_size_inches(18.5, 10.5, forward=True)
     if filepath:
         plt.savefig(filepath, bbox_inches="tight")
