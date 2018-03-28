@@ -80,10 +80,10 @@ class Sweep(object):
         return [Response(curr_inj_params, self) 
                 for curr_inj_params in self.current_inj_waveforms()]
 
-    def plot(self, filepath=None):
+    def plot(self, filepath=None, ylim_data=None, ylim_commands=[-450, 250], ylim_output=[-150, 50]):
 
-        for fig, (ax1, ax2) in self.cell.sweep_plot_setup(filepath):
-            ax1.plot(self.sweep_df.time, self.sweep_df.data)
-            ax2.plot(self.sweep_df.time, self.sweep_df.commands)
+        for fig, (ax1, ax2) in self.cell.sweep_plot_setup(filepath, ylim_commands=ylim_commands, ylim_output=ylim_output):
+            ax1.plot(self.sweep_df.time, self.sweep_df.data, 'k')
+            ax2.plot(self.sweep_df.time, self.sweep_df.commands, 'k')
             ax1.set(title = f"sweep #{self.sweep_df.sweep_index[0]}")
             ax1.set_xlim([0, max(self.sweep_df.time)]); 

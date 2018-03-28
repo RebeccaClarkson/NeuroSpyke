@@ -175,16 +175,22 @@ class Cell(object):
         if response_df is not None:
             if self.query.cell_criteria['rheobase']:
                 assert self.query.cell_criteria['rheobase']
+
                 threshold_timing_col_bool = len([
                         col for col in response_df.columns if 'threshold_timing' in col]) > 0
-                assert threshold_timing_col_bool, "Threshold timing is required to determine rheobase"
+
+                assert threshold_timing_col_bool, \
+                        "Threshold timing is required to determine rheobase"
+
                 #response_criteria_dict = dict(self.query.response_criteria)
                 #assert response_criteria_dict[
                 #         'num_spikes'] == 1, "Rheobase only defined for num_spikes = 1"
 
                 rheo_thresh_timing_idx = response_df['threshold_timing0'].argmax()
 
-                #TODO: make sure this will always overwrite self.analyzed_sweeps from self.valid_responses()
+                #TODO: make sure this will always overwrite
+                #self.analyzed_sweeps from self.valid_responses()
+
                 self.analyzed_sweep_ids = [rheo_thresh_timing_idx]
 
                 rheobase_df = response_df.loc[[rheo_thresh_timing_idx]]
@@ -308,12 +314,22 @@ class Cell(object):
 ###################################   PLOT   #############################################
 ##########################################################################################
 
-    def sweep_plot_setup(self, filepath=None):
+    def sweep_plot_setup(self, filepath=None, ylim_commands=None, 
+            ylim_output=None):
+
         fig, (ax1, ax2) = plt.subplots(2, sharex=True)
 
         ax1.set_ylabel('mV'); 
-        ax2.set_xlabel('time (s)'); ax2.set_ylabel('pA')
-        ax2.set_ylim([-450, 250])
+        ax2.set_xlabel('time (s)'); 
+        ax2.set_ylabel('pA')
+
+        #ax1.spines['bottom'].set_visible(False)
+        #ax1.axes.get_xaxis().set_visible(False)
+        
+        if ylim_output:
+            ax1.set_ylim(ylim_output)
+        if ylim_commands:
+            ax2.set_ylim(ylim_commands) 
 
         yield fig, (ax1, ax2)
 
@@ -322,19 +338,17 @@ class Cell(object):
         else:
             plt.show()
 
-    def plot_sweeps(self, sweeps=None, filepath=None):
+    def plot_sweeps(self, sweeps=None, filepath=None, ylim_commands=[-450, 250], ylim_output=[-150, 50]):
 
         sweeps = sweeps or self.analyzed_sweeps()
         
-        for fig, (ax1, ax2) in self.sweep_plot_setup(filepath):
+        for fig, (ax1, ax2) in self.sweep_plot_setup(filepath, ylim_commands=ylim_commands, ylim_output=ylim_output):
             x_max = 0
             for sweep in sweeps:
                 ax1.plot(sweep.sweep_df.time, sweep.sweep_df.data)
                 ax2.plot(sweep.sweep_df.time, sweep.sweep_df.commands)
                 x_max = max([x_max, max(sweep.sweep_df.time)])
             ax1.set_xlim([0, x_max])
-            ax1.spines['bottom'].set_visible(False)
-            ax1.axes.get_xaxis().set_visible(False)
             ax1.set_title(self.calc_cell_name())
     
     def plot_reb_delta_t(self, left_window=100, right_window=230, filepath=None):

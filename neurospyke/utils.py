@@ -44,5 +44,3 @@ def concat_dfs_by_index(df1, df2):
 def reorder_df(df, first_columns):
     reordered = first_columns + [c for c in df.columns if c not in first_columns]
     return df[reordered]
-
-

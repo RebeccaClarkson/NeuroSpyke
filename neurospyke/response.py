@@ -609,7 +609,7 @@ class Response(object):
         ax1.set_xlabel(f'time ({xscale})')
         ax1.set_ylabel('mV')
         ax1.set_title(self.sweep.cell.calc_cell_name())
-            
+
         yield fig, (ax1, ax2)
 
         if filepath:
