@@ -35,6 +35,11 @@ def classify_cell(cell_to_classify, plot=True, filepath=None):
     fig = plt.figure()
     i = 1
     cell_type = []
+    def get_LDA_data(df):
+        ca_buffer_rows = df['ca_buffer']==ca_buffer
+        num_spikes_rows = df['num_spikes']==num_spikes
+        return df.loc[ca_buffer_rows & num_spikes_rows]
+
     for num_spikes in range(3, 9):
     
         ax = fig.add_subplot(2, 3, i)
@@ -49,10 +54,6 @@ def classify_cell(cell_to_classify, plot=True, filepath=None):
     
         ca_buffer = cell_df['ca_buffer'].values[0]
     
-        def get_LDA_data(df):
-            ca_buffer_rows = df['ca_buffer']==ca_buffer
-            num_spikes_rows = df['num_spikes']==num_spikes
-            return df.loc[ca_buffer_rows & num_spikes_rows]
          
         lda_coeff = get_LDA_data(LDA_coeff)[all_variables].as_matrix()
         lda_intercept = get_LDA_data(LDA_coeff)['intercept'].as_matrix()
